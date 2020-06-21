@@ -5,7 +5,7 @@
 A single timer, called an 'hourglass', that reminds you to take breaks every 30 minutes by popping up a window which partially renders your screen useless.
 
 ## Yet to be implemented
-Multiple configurable hourglasses with custom messages.  
-GUI interface for configuring the hourglasses.  
-Unit Tests.  
-Documentation.  
+Multiple configurable hourglasses with custom messages.\
+GUI interface for configuring the hourglasses.\
+Unit Tests.\
+Documentation.
