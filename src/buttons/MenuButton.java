@@ -1,9 +1,5 @@
 package buttons;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-
 import javax.swing.JButton;
 
 import constants.Constants;
@@ -11,6 +7,11 @@ import constants.CurrentConfiguration;
 
 public class MenuButton extends JButton
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7026716914176317123L;
+
 	MenuButton(){
 		setBounds(0,0,Constants.buttonFontSize,Constants.buttonFontSize);	
 		
@@ -34,15 +35,15 @@ public class MenuButton extends JButton
 		    });
 		}
 		else {
-			setBackground(Color.WHITE);
-	        setForeground(Color.BLACK);
+			setBackground(Constants.lightModeButtonBg);
+	        setForeground(Constants.lightModeButtonFg);
 	        addMouseListener(new java.awt.event.MouseAdapter() {
 		        public void mouseEntered(java.awt.event.MouseEvent evt) {
-		        	setBackground(Color.decode("0xDDDDDD"));
+		        	setBackground(Constants.lightModeButtonHoverBg);
 		        }
 	
 		        public void mouseExited(java.awt.event.MouseEvent evt) {
-		            setBackground(Color.decode("0xFFFFFF"));
+		            setBackground(Constants.lightModeButtonBg);
 		        }
 		    });
 		}   

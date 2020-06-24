@@ -3,8 +3,6 @@ package constants;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
 import java.awt.Toolkit;
 
 import buttons.CloseButton;
@@ -45,7 +43,17 @@ public class Constants {
 	public static String msgBody = "Time to stretch";
 
 	//light mode color scheme
-	//public static lightModeBgColor = popupWindow.getBackground();
+		//common scheme
+		public static Color lightModeBg = Color.decode("0xEEEEEE");	//Charcoal Grey
+		public static Color lightModeFg = Color.BLACK;
+	
+		//button scheme
+		public static Color lightModeButtonBg = Color.decode("0xFFFFFF");
+		public static Color lightModeButtonHoverBg = Color.decode("0xDDDDDD");
+		public static Color lightModeButtonFg = Color.BLACK;
+		
+		//label scheme
+		public static Color lightModeLabelBg = Color.decode("0xEEEEEE");
 	
 	//dark mode color scheme
 		//common scheme
@@ -68,6 +76,6 @@ public class Constants {
 	public static CloseButton disabledButton;
 	public static boolean continueTimer = false;
 	public static int buttonDisableDuration = 30*1000;	//in milliseconds
-	public static int timerDuration = 30;	//in minutes
+	public static int timerDuration = 15;	//in minutes
 	
 }

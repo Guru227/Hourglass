@@ -15,7 +15,7 @@ import constants.Constants;
 		later = now.plusMinutes(Constants.timerDuration);
 		while( ! now.isAfter(later)) {
 			try {
-				Thread.sleep(10000);
+				Thread.sleep(100);
 				now = LocalDateTime.now();
 			} catch (InterruptedException e) {
 				e.printStackTrace();

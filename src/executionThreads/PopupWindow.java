@@ -16,6 +16,10 @@ import constants.CurrentConfiguration;
 
 public class PopupWindow extends JFrame{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2238614558467991706L;
 	private Canvas canvas = new Canvas();
 	
 	//initialize window method
@@ -25,7 +29,7 @@ public class PopupWindow extends JFrame{
 		setSize(Constants.windowWidth, Constants.windowHeight);
 		setLocationRelativeTo(null);	//centers window
 		setUndecorated(true);	//removes title bar
-		setAlwaysOnTop(true);	//makes window the top window
+		setAlwaysOnTop(true);	//overlays this window over all others
 		Constants.popupWindow = this;
 	}	
 
@@ -46,6 +50,11 @@ public class PopupWindow extends JFrame{
 
 
 class Canvas extends JPanel{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2011834783476562108L;
+
 	private GridBagLayout messageBodyLayout = new GridBagLayout();
 	
 	//Message Heading Layout constraints
@@ -88,6 +97,11 @@ class Canvas extends JPanel{
 			setBackground(Constants.darkModeBg);	
 			headLabel.setBackground(Constants.darkModeBg);
 			bodyLabel.setBackground(Constants.darkModeBg);
+		}
+		else {
+			setBackground(Constants.lightModeBg);	
+			headLabel.setBackground(Constants.lightModeBg);
+			bodyLabel.setBackground(Constants.lightModeBg);
 		}
 		add(headLabel, msgHeadingConstraints);
 		add(bodyLabel, msgBodyConstraints);

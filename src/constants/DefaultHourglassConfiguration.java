@@ -3,7 +3,7 @@ package constants;
 import buttons.CloseButton;
 import executionThreads.PopupWindow;
 
-public class CurrentConfiguration {
+public final class DefaultHourglassConfiguration {
 	public static final boolean fadeIn = false;
 	public static final boolean slideIn = false;
 	public static final boolean darkMode = false;

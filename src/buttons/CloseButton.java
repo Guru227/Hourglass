@@ -7,6 +7,11 @@ import constants.Constants;
 
 //Closes window without terminating the program (Timer still runs)
 public class CloseButton extends MenuButton{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7986051705687255007L;
+
 	public CloseButton(String m){
 		super();
 		setText(m);		//Set message on button
