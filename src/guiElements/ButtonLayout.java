@@ -4,8 +4,6 @@ import java.awt.GridLayout;
 
 import javax.swing.JPanel;
 
-import buttons.CloseButton;
-import buttons.TerminateButton;
 import constants.Constants;
 import constants.CurrentConfiguration;
 
@@ -22,19 +20,19 @@ public class ButtonLayout extends JPanel{
 	public ButtonLayout(){	
 		setLayout(ButtonLayout);
 		
-		b1 = new CloseButton(Constants.quitButtonMsg);
-		b1.setEnabled(false);
-		Constants.disabledButton = b1;
-		b2 = new TerminateButton(Constants.terminateButtonMsg);
+		b1 = new CloseButton(CurrentConfiguration.quitButtonMsg);
+		Constants.b1 = b1;
+		System.out.println("\tDisabling Button");
+		b1.setEnabled(false);		
+		
+		b2 = new TerminateButton(CurrentConfiguration.terminateButtonMsg);
 		p = new JPanel();
-		if(CurrentConfiguration.darkMode) {
-			p.setBackground(Constants.darkModeBg);
-		}
-		else {
-			p.setBackground(Constants.lightModeBg);
-		}
+		p.setBackground(CurrentConfiguration.bg);
+		
 		add(b1);
 		add(p);
-		add(b2);
+		add(b2);		
+		
 	}
 }
+

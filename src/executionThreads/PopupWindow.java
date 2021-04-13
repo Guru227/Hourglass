@@ -3,8 +3,11 @@ package executionThreads;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-import javax.swing.JFrame;
+import javax.swing.JDialog;
 import javax.swing.JPanel;
 
 import guiElements.CenteredJLabel;
@@ -13,14 +16,10 @@ import guiElements.ButtonLayout;
 import constants.Constants;
 import constants.CurrentConfiguration;
 
-
-public class PopupWindow extends JFrame{
-
-	/**
-	 * 
-	 */
+public class PopupWindow extends JDialog{
 	private static final long serialVersionUID = 2238614558467991706L;
-	private Canvas canvas = new Canvas();
+	private final static ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+	private Canvas canvas = new Canvas();	
 	
 	//initialize window method
 	private void initializeWindow()
@@ -28,31 +27,34 @@ public class PopupWindow extends JFrame{
 		//initialize window
 		setSize(Constants.windowWidth, Constants.windowHeight);
 		setLocationRelativeTo(null);	//centers window
+		setModalityType(JDialog.DEFAULT_MODALITY_TYPE);	//setModal(true); pauses thread execution
 		setUndecorated(true);	//removes title bar
 		setAlwaysOnTop(true);	//overlays this window over all others
 		Constants.popupWindow = this;
-	}	
-
+	}
+	
 	//Class constructor
  	PopupWindow()
 	{
 		initializeWindow();
 		add(canvas);
+		Constants.parentJDialog = this;	
 	}
+ 	
  	public void openWindow() {
+ 		System.out.println("\tStarting window");
+ 		System.out.println("\tAlready starting timer");
+ 		
+ 		MyTimerTask t = new MyTimerTask(Constants.b1);
+		Constants.ta = t;
+ 		scheduler.schedule(Constants.ta, 1, TimeUnit.SECONDS);
+ 		
 		setVisible(true);	//This has to be last	
  	}
- 	public void closeWindow() {
-		setVisible(false);	//This has to be last	
- 	}
-
 }
 
-
-class Canvas extends JPanel{
-	/**
-	 * 
-	 */
+//	GUI Layout
+class Canvas extends JPanel {
 	private static final long serialVersionUID = -2011834783476562108L;
 
 	private GridBagLayout messageBodyLayout = new GridBagLayout();
@@ -93,16 +95,11 @@ class Canvas extends JPanel{
 		setLayout(messageBodyLayout);
 		initializeConstraints();
 		
-		if(CurrentConfiguration.darkMode) {
-			setBackground(Constants.darkModeBg);	
-			headLabel.setBackground(Constants.darkModeBg);
-			bodyLabel.setBackground(Constants.darkModeBg);
-		}
-		else {
-			setBackground(Constants.lightModeBg);	
-			headLabel.setBackground(Constants.lightModeBg);
-			bodyLabel.setBackground(Constants.lightModeBg);
-		}
+		//Set background colors
+		setBackground(CurrentConfiguration.bg);	
+		headLabel.setBackground(CurrentConfiguration.bg);
+		bodyLabel.setBackground(CurrentConfiguration.bg);
+		
 		add(headLabel, msgHeadingConstraints);
 		add(bodyLabel, msgBodyConstraints);
 		add(b, buttonLayoutConstraints);

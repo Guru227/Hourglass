@@ -12,10 +12,10 @@ import constants.Constants;
 	
 	public boolean startTimer() {
 		now = LocalDateTime.now();
-		later = now.plusMinutes(Constants.timerDuration);
+		later = now.plusSeconds(Constants.timerDuration);
 		while( ! now.isAfter(later)) {
 			try {
-				Thread.sleep(100);
+				Thread.sleep(1000);
 				now = LocalDateTime.now();
 			} catch (InterruptedException e) {
 				e.printStackTrace();

@@ -1,6 +1,5 @@
 package constants;
 
-import buttons.CloseButton;
 import executionThreads.PopupWindow;
 
 public final class DefaultHourglassConfiguration {
@@ -20,9 +19,6 @@ public final class DefaultHourglassConfiguration {
 	public static String msgBody = "Time to stretch";
 	
 	//program running
-	public static boolean programRunning = true;
-	public static CloseButton disabledButton;
-	public static boolean continueTimer = false;
 	public static int buttonDisableDuration = 30*1000;	//in milliseconds
 	public static int timerDuration = 30;	//in minutes
 }

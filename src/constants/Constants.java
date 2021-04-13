@@ -5,8 +5,11 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Toolkit;
 
-import buttons.CloseButton;
+import javax.swing.JDialog;
+
 import executionThreads.PopupWindow;
+import guiElements.CloseButton;
+import executionThreads.MyTimerTask;
 
 public class Constants {
 	//Screen and Window Dimensions
@@ -74,8 +77,10 @@ public class Constants {
 	//program running
 	public static boolean programRunning = true;
 	public static CloseButton disabledButton;
+	public static JDialog parentJDialog;
+	public static MyTimerTask ta;
+	public static CloseButton b1;
 	public static boolean continueTimer = false;
-	public static int buttonDisableDuration = 30*1000;	//in milliseconds
-	public static int timerDuration = 15;	//in minutes
-	
+	public static int buttonDisableDuration = 3*1000;	//in milliseconds
+	public static int timerDuration = 3;	//in seconds
 }

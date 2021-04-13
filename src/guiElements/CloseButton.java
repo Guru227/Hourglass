@@ -1,4 +1,4 @@
-package buttons;
+package guiElements;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -15,16 +15,25 @@ public class CloseButton extends MenuButton{
 	public CloseButton(String m){
 		super();
 		setText(m);		//Set message on button
-		addActionListener(new CloseOnClick());		//Add action listeners
+		addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Constants.b1.setEnabled(false);
+				Constants.parentJDialog.dispose();
+			}
+		});
 	}
 }
 
-class CloseOnClick implements ActionListener{	
+/*
+private class CloseOnClick implements ActionListener{	
 	//uses input parent window's handler to close window
-	public void actionPerformed(ActionEvent e)
+	public void actionPerformed(ActionEvent e, JDialog parentJDialog)
   {
 		Constants.continueTimer = true;
 		System.out.println("Set continueTimer variable in Constants");
 		System.out.println(Constants.continueTimer);
+		parentJDialog.dispose();
+		//windowClosing()
   }
 }
+*/

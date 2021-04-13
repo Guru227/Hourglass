@@ -6,8 +6,6 @@ import java.awt.GridBagLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-
-import constants.Constants;
 import constants.CurrentConfiguration;
 
 public class CenteredJLabel extends JPanel{
@@ -21,14 +19,8 @@ public class CenteredJLabel extends JPanel{
     public CenteredJLabel(String message, Font labelFont) {
     	label = new JLabel(message);
     	label.setFont(labelFont);
-    	if(CurrentConfiguration.darkMode) {
-    		label.setForeground(Constants.darkModeFg);
-    		label.setBackground(Constants.darkModeLabelBg);
-    	}
-    	else {
-    		label.setForeground(Constants.lightModeFg);
-    		label.setBackground(Constants.lightModeLabelBg);
-    	}
+		label.setForeground(CurrentConfiguration.fg);
+		label.setBackground(CurrentConfiguration.labelBg);
         setLayout(layout);
         add(label);  	
     }
