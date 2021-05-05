@@ -13,7 +13,6 @@ import javax.swing.JPanel;
 import guiElements.CenteredJLabel;
 import guiElements.ButtonLayout;
 
-import constants.Constants;
 import constants.CurrentConfiguration;
 
 public class PopupWindow extends JDialog{
@@ -25,12 +24,12 @@ public class PopupWindow extends JDialog{
 	private void initializeWindow()
 	{
 		//initialize window
-		setSize(Constants.windowWidth, Constants.windowHeight);
+		setSize(CurrentConfiguration.windowWidth, CurrentConfiguration.windowHeight);
 		setLocationRelativeTo(null);	//centers window
 		setModalityType(JDialog.DEFAULT_MODALITY_TYPE);	//setModal(true); pauses thread execution
 		setUndecorated(true);	//removes title bar
 		setAlwaysOnTop(true);	//overlays this window over all others
-		Constants.popupWindow = this;
+		CurrentConfiguration.popupWindow = this;
 	}
 	
 	//Class constructor
@@ -38,16 +37,17 @@ public class PopupWindow extends JDialog{
 	{
 		initializeWindow();
 		add(canvas);
-		Constants.parentJDialog = this;	
+		CurrentConfiguration.parentJDialog = this;	
 	}
  	
  	public void openWindow() {
  		System.out.println("\tStarting window");
  		System.out.println("\tAlready starting timer");
  		
- 		MyTimerTask t = new MyTimerTask(Constants.b1);
-		Constants.ta = t;
- 		scheduler.schedule(Constants.ta, 1, TimeUnit.SECONDS);
+ 		MyTimerTask t = new MyTimerTask(CurrentConfiguration.b1);
+ 		CurrentConfiguration.ta = t;
+ 		System.out.println("\t\t" + CurrentConfiguration.buttonDisableDuration);
+ 		scheduler.schedule(CurrentConfiguration.ta, CurrentConfiguration.timerDuration, TimeUnit.SECONDS);
  		
 		setVisible(true);	//This has to be last	
  	}
@@ -67,8 +67,8 @@ class Canvas extends JPanel {
 	public static GridBagConstraints buttonLayoutConstraints = new GridBagConstraints();
 
 	//Define Labels
-	private CenteredJLabel headLabel = new CenteredJLabel(Constants.msgHeading, Constants.msgHeadingFont);
-	private CenteredJLabel bodyLabel = new CenteredJLabel(Constants.msgBody, Constants.msgBodyFont);
+	private CenteredJLabel headLabel = new CenteredJLabel(CurrentConfiguration.msgHeading, CurrentConfiguration.msgHeadingFont);
+	private CenteredJLabel bodyLabel = new CenteredJLabel(CurrentConfiguration.msgBody, CurrentConfiguration.msgBodyFont);
 	private ButtonLayout b = new ButtonLayout();
 	
 	private void initializeConstraints() {
@@ -76,7 +76,7 @@ class Canvas extends JPanel {
 		msgHeadingConstraints.gridx = 0;
 		msgHeadingConstraints.gridy = 0;
 		msgHeadingConstraints.gridwidth = 5;
-		msgHeadingConstraints.insets = new Insets((int) Constants.windowHeight/11, 0, 0, 0);
+		msgHeadingConstraints.insets = new Insets((int) CurrentConfiguration.windowHeight/11, 0, 0, 0);
 		
 		//Message Body Layout Constraints
 		msgBodyConstraints.gridx = 0;
@@ -87,7 +87,7 @@ class Canvas extends JPanel {
 		//Button Layout Constraints
 		buttonLayoutConstraints.gridx = 0;
 		buttonLayoutConstraints.gridy = 2;
-		buttonLayoutConstraints.insets = new Insets(Constants.windowHeight/5,0,0,0);
+		buttonLayoutConstraints.insets = new Insets(CurrentConfiguration.windowHeight/5,0,0,0);
 	}
 	
 	Canvas(){

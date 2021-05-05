@@ -3,7 +3,7 @@ package guiElements;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import constants.Constants;
+import constants.CurrentConfiguration;
 
 //Closes window without terminating the program (Timer still runs)
 public class CloseButton extends MenuButton{
@@ -17,8 +17,8 @@ public class CloseButton extends MenuButton{
 		setText(m);		//Set message on button
 		addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Constants.b1.setEnabled(false);
-				Constants.parentJDialog.dispose();
+				CurrentConfiguration.b1.setEnabled(false);
+				CurrentConfiguration.parentJDialog.dispose();
 			}
 		});
 	}

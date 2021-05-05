@@ -3,7 +3,7 @@ package executionThreads;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import constants.Constants;
+import constants.CurrentConfiguration;
 
  public class Timer {
 	DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"); 
@@ -12,7 +12,7 @@ import constants.Constants;
 	
 	public boolean startTimer() {
 		now = LocalDateTime.now();
-		later = now.plusSeconds(Constants.timerDuration);
+		later = now.plusSeconds(CurrentConfiguration.buttonDisableDuration);
 		while( ! now.isAfter(later)) {
 			try {
 				Thread.sleep(1000);

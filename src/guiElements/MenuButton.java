@@ -2,7 +2,6 @@ package guiElements;
 
 import javax.swing.JButton;
 
-import constants.Constants;
 import constants.CurrentConfiguration;
 
 public class MenuButton extends JButton
@@ -13,12 +12,12 @@ public class MenuButton extends JButton
 	private static final long serialVersionUID = -7026716914176317123L;
 
 	MenuButton(){
-		setBounds(0,0,Constants.buttonFontSize,Constants.buttonFontSize);	
+		setBounds(0,0,CurrentConfiguration.buttonFontSize,CurrentConfiguration.buttonFontSize);	
 		
 		//customize look and feel
 		setBorderPainted(false);	//removes borders
 		setFocusPainted(false);		//removes default color
-		setFont(Constants.buttonFont);
+		setFont(CurrentConfiguration.buttonFont);
 		
 		setBackground(CurrentConfiguration.buttonBg);
         setForeground(CurrentConfiguration.buttonFg);

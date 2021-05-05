@@ -4,7 +4,6 @@ import java.awt.GridLayout;
 
 import javax.swing.JPanel;
 
-import constants.Constants;
 import constants.CurrentConfiguration;
 
 public class ButtonLayout extends JPanel{
@@ -21,7 +20,7 @@ public class ButtonLayout extends JPanel{
 		setLayout(ButtonLayout);
 		
 		b1 = new CloseButton(CurrentConfiguration.quitButtonMsg);
-		Constants.b1 = b1;
+		CurrentConfiguration.b1 = b1;
 		System.out.println("\tDisabling Button");
 		b1.setEnabled(false);		
 		

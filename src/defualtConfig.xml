@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>Default settings</comment>
+<entry key="buttonDisableDuration">7</entry>
+<entry key="timerDuration">3</entry>
+<entry key="fadeIn">false</entry>
+<entry key="slideIn">false</entry>
+<entry key="darkMode">true</entry>
+<entry key="msgBody">Time to stretch</entry>
+<entry key="quitButtonMsg">I'm Done stretching!</entry>
+<entry key="msgHeading">Up you go!</entry>
+<entry key="terminateButtonMsg">Stop the timer</entry>
+</properties>

@@ -4,14 +4,15 @@ import constants.CurrentConfiguration;
 
 public class MainThread{	
 	public static void main(String[] args) {
-		CurrentConfiguration.setDarkMode();
-			Hourglass hourglass = new Hourglass();
-			System.out.println("Starting threads.");
-			try {
-				hourglass.runThreads();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+//		DefaultHourglassConfiguration.saveDefaultConfiguration();
+		CurrentConfiguration.loadDefaultConfiguration();
+		Hourglass hourglass = new Hourglass();
+		System.out.println("Starting threads.");
+		try {
+			hourglass.runThreads();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }
 
