@@ -4,7 +4,6 @@ import constants.CurrentConfiguration;
 
 public class MainThread{	
 	public static void main(String[] args) {
-//		DefaultHourglassConfiguration.saveDefaultConfiguration();
 		CurrentConfiguration.loadDefaultConfiguration();
 		Hourglass hourglass = new Hourglass();
 		System.out.println("Starting threads.");

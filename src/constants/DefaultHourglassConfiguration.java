@@ -48,8 +48,8 @@ public final class DefaultHourglassConfiguration {
 		public static Color darkModeLabelBg = Color.decode("0x333333");
 		
 	//program running
-	public static int buttonDisableDuration = 3*1000;	//in milliseconds
-	public static int timerDuration = 3;	//in seconds
+	public static int buttonDisableDuration = 900;	//in seconds (15 minutes)
+	public static int timerDuration = 30;	//in seconds
 	
 	public static void saveDefaultConfiguration() {
 		File configFile = new File("defualtConfig.xml");
