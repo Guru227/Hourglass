@@ -14,20 +14,27 @@ either side of the message.
 ## What it looks like
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│   🏃 (jacks)        Up you go!          (pushup) 🤸        │
-│                    Time to stretch                         │
-│                        ⧗  (sand falling)                   │
-│        [ I'm Done stretching! (28s) ]  [ Stop the timer ]  │
-└──────────────────────────────────────────────────────────┘
+████████████████ whole screen, space-grey dim ████████████████
+█                          ⧗  (sand falling)                  █
+█    [jacks]            Up you go!            [pushup]         █
+█                      Time to stretch                        █
+█           [ I'm Done stretching! (5s) ] [ Stop ]            █
+█        "Rest is not idleness. — John Lubbock"               █
+███████████████████████████████████████████████████████████████
 ```
 
-- **Dark mode** (default) and a light theme — toggled by the `dark_mode` config flag.
-- **Always-on-top, frameless, full-screen overlay** that dims the whole screen.
-- **Center pixel hourglass** with draining/filling sand + falling grains.
-- **Flanking 8-bit exercise sprites**, drawn procedurally (no image assets) and
-  animated through a routine. Left and right run the routine phase-shifted and
-  reversed so they're never doing the same move.
+- **CRT-green minimalist theme** (default): phosphor green on space grey, with
+  scanlines + a faint flicker. `dark` (arcade) and `light` themes also ship.
+- **Genuine fullscreen overlay**, always-on-top and **sticky across virtual
+  desktops** — it follows you when you switch workspaces.
+- **Pixel hourglass at the top**, with draining/filling sand + falling grains.
+- **Flanking 8-bit exercise sprites** (jacks/squat/stretch/pushup), drawn
+  procedurally (no image assets); left/right are phase-shifted and reversed.
+- **Rotating factoid / quote** at the bottom — health one-liners and quotes from
+  great thinkers (`content_mode`: `both` | `factoids` | `quotes`).
+- **Tray icon** (Ubuntu top bar) → **Settings…**, **Take a break now**,
+  **Pause / Resume**, **Quit**. The settings window edits durations, content
+  mode, theme and messages, applied live.
 - The **"I'm done" button is disabled for the break duration** — same forced-break
   behaviour as the original.
 
@@ -35,10 +42,12 @@ either side of the message.
 
 | Concern            | Where                                   |
 |--------------------|-----------------------------------------|
-| Work-period timing | `src-tauri/src/main.rs` — one async loop + `tokio::Notify` (replaces the Java two-thread `Lock` ping-pong) |
-| Show/hide/quit     | Tauri commands `break_done`, `quit_app`; window shown from Rust |
+| Work-period timing | `src-tauri/src/main.rs` — one async loop + `tokio::Notify`, interruptible by "break now" / "pause" via `tokio::select!` (replaces the Java two-thread `Lock` ping-pong) |
+| Fullscreen/sticky window | `show_overlay()` in `main.rs` — sets monitor size + `set_fullscreen` + `set_visible_on_all_workspaces` (reliable on Wayland) |
+| Tray + settings    | `build_tray()` in `main.rs`; settings window = `src/settings.html` + `settings.js` |
 | Break UI + countdown | `src/main.js` |
-| Pixel art          | `src/sprites.js` (procedural low-res canvas, blitted with `imageSmoothingEnabled=false`) |
+| Pixel art          | `src/sprites.js` (procedural low-res canvas, blitted with `imageSmoothingEnabled=false`; mono-green in CRT theme) |
+| Factoids / quotes  | `src/content.js` |
 | Styling / themes   | `src/styles.css` (CSS custom properties swapped via `data-theme`) |
 | Config             | JSON at the OS config dir (see below)    |
 
@@ -63,11 +72,17 @@ config dir, e.g. on Linux:
   "msg_body": "Time to stretch",
   "quit_button_msg": "I'm Done stretching!",
   "terminate_button_msg": "Stop the timer",
-  "dark_mode": true
+  "theme": "crt",             // "crt" | "dark" | "light"
+  "content_mode": "both"      // "both" | "factoids" | "quotes"
 }
 ```
 
-Edit and relaunch to apply.
+Easiest to edit via the **tray → Settings…** window; or edit the file and
+relaunch. (Older files with `dark_mode` still load — unknown fields are ignored.)
+
+> **Tray icons on GNOME/Ubuntu:** the tray icon needs the AppIndicator
+> extension, which Ubuntu ships and enables by default. On vanilla GNOME you may
+> need the "AppIndicator and KStatusNotifier" extension for the icon to appear.
 
 ## Building & running
 

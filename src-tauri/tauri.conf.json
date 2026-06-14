@@ -12,14 +12,30 @@
       {
         "label": "main",
         "title": "Hourglass",
+        "url": "index.html",
         "fullscreen": true,
         "transparent": true,
         "decorations": false,
         "alwaysOnTop": true,
+        "visibleOnAllWorkspaces": true,
         "skipTaskbar": true,
         "resizable": false,
         "focus": true,
         "shadow": false,
+        "visible": false
+      },
+      {
+        "label": "settings",
+        "title": "Hourglass Settings",
+        "url": "settings.html",
+        "width": 480,
+        "height": 660,
+        "minWidth": 420,
+        "minHeight": 560,
+        "resizable": true,
+        "decorations": true,
+        "center": true,
+        "skipTaskbar": false,
         "visible": false
       }
     ],

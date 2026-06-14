@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="crt">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,11 +7,16 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <!-- Dim backdrop that "partially renders the screen useless" -->
+  <!-- Full-screen space-grey wash that takes over the whole display -->
   <div id="overlay" class="overlay">
     <div class="card" role="dialog" aria-label="Break reminder">
 
-      <!-- Top row: exercise sprite | text | exercise sprite -->
+      <!-- Hourglass at the top center -->
+      <div class="center-stage">
+        <canvas id="hourglass" width="120" height="170" aria-hidden="true"></canvas>
+      </div>
+
+      <!-- Middle: exercise sprite | text | exercise sprite -->
       <div class="hero">
         <canvas class="sprite" id="spriteLeft" width="160" height="220" aria-hidden="true"></canvas>
 
@@ -23,11 +28,6 @@
         <canvas class="sprite" id="spriteRight" width="160" height="220" aria-hidden="true"></canvas>
       </div>
 
-      <!-- Center pixel hourglass with falling sand -->
-      <div class="center-stage">
-        <canvas id="hourglass" width="120" height="170" aria-hidden="true"></canvas>
-      </div>
-
       <!-- Buttons -->
       <div class="buttons">
         <button id="quitBtn" class="btn btn-primary" disabled>
@@ -37,10 +37,15 @@
         <button id="terminateBtn" class="btn btn-ghost">Stop the timer</button>
       </div>
 
+      <!-- Bottom: rotating factoid / quote -->
+      <p id="factoid" class="factoid"></p>
+
       <div class="scanlines" aria-hidden="true"></div>
+      <div class="crt-flicker" aria-hidden="true"></div>
     </div>
   </div>
 
+  <script src="content.js"></script>
   <script src="sprites.js"></script>
   <script src="main.js"></script>
 </body>

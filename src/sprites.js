@@ -14,6 +14,14 @@
   function readPalette() {
     const cs = getComputedStyle(document.documentElement);
     const get = (v, fallback) => (cs.getPropertyValue(v).trim() || fallback);
+    const mono = get("--mono", "0") === "1";
+    if (mono) {
+      // Monochrome (CRT): everything in two shades of phosphor green.
+      const g = get("--fg", "#57ff97");
+      const d = get("--fg-dim", "#2f9d63");
+      return { skin: g, hair: d, shirt: g, short: d, shoe: d,
+               sand: g, glass: d, frame: g };
+    }
     return {
       skin:  "#f4b183",
       hair:  "#4a3526",

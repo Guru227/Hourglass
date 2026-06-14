@@ -1,17 +1,16 @@
 /* ===========================================================================
    Hourglass — overlay controller
    ---------------------------------------------------------------------------
-   Drives the break overlay UI. The *work-period* timing lives in Rust (so the
-   OS can't throttle a backgrounded JS timer); this file handles the visible
-   break: showing the card, the forced-break countdown that keeps the "I'm
-   done" button disabled, and dismissing / terminating.
+   Drives the break overlay UI. Work-period timing lives in Rust; this handles
+   the visible break: theme, the forced-break countdown that keeps the "I'm
+   done" button disabled, the rotating factoid/quote, and dismiss / terminate.
 
-   It also runs standalone in a plain browser (no Tauri) for design preview.
+   Runs standalone in a plain browser (no Tauri) for design preview.
    =========================================================================== */
 (function () {
   "use strict";
 
-  const T = window.__TAURI__;                 // present only inside Tauri
+  const T = window.__TAURI__;
   const invoke = T ? T.core.invoke : null;
   const listen = T ? T.event.listen : null;
 
@@ -23,6 +22,7 @@
   const quitLabel = el("quitLabel");
   const countdownEl = el("countdown");
   const terminateBtn = el("terminateBtn");
+  const factoidEl = el("factoid");
 
   let cfg = {
     work_seconds: 900,
@@ -31,14 +31,16 @@
     msg_body: "Time to stretch",
     quit_button_msg: "I'm Done stretching!",
     terminate_button_msg: "Stop the timer",
-    dark_mode: true,
+    theme: "crt",
+    content_mode: "both",
   };
 
   let breakTimer = null;
 
   function applyConfig(c) {
     cfg = Object.assign(cfg, c || {});
-    document.documentElement.setAttribute("data-theme", cfg.dark_mode ? "dark" : "light");
+    const theme = ["crt", "dark", "light"].includes(cfg.theme) ? cfg.theme : "crt";
+    document.documentElement.setAttribute("data-theme", theme);
     window.HourglassArt.refreshTheme();
     headingEl.textContent = cfg.msg_heading;
     bodyEl.textContent = cfg.msg_body;
@@ -46,11 +48,14 @@
     terminateBtn.textContent = cfg.terminate_button_msg;
   }
 
-  // Start the looping pixel animations (cheap; only painted while visible).
   function startArt() {
     window.HourglassArt.startSprite(el("spriteLeft"), { offset: 0 });
     window.HourglassArt.startSprite(el("spriteRight"), { offset: 0.5, reverse: true });
     window.HourglassArt.startHourglass(el("hourglass"));
+  }
+
+  function newFactoid() {
+    factoidEl.textContent = window.HourglassContent.pick(cfg.content_mode);
   }
 
   // The forced break: keep the quit button disabled for break_seconds.
@@ -75,16 +80,16 @@
 
   function showBreak() {
     overlay.style.display = "flex";
+    newFactoid();
     beginBreakCountdown();
   }
 
-  // --- button handlers ---------------------------------------------------
   quitBtn.addEventListener("click", async () => {
     if (quitBtn.disabled) return;
     if (invoke) {
-      await invoke("break_done");            // Rust hides window + restarts work timer
+      await invoke("break_done");
     } else {
-      overlay.style.display = "none";        // preview: fake the work period
+      overlay.style.display = "none";
       setTimeout(showBreak, 3000);
     }
   });
@@ -94,16 +99,17 @@
     else overlay.style.display = "none";
   });
 
-  // --- boot --------------------------------------------------------------
   async function boot() {
     startArt();
     if (invoke) {
       try { applyConfig(await invoke("load_config")); }
       catch (e) { console.error("load_config failed", e); applyConfig(cfg); }
-      // Rust shows the window and fires this when a break is due.
       await listen("break-start", () => showBreak());
+      // Settings window saved changes — re-apply live.
+      await listen("config-updated", async () => {
+        try { applyConfig(await invoke("load_config")); } catch (e) {}
+      });
     } else {
-      // Standalone browser preview: just show the break immediately.
       applyConfig(cfg);
       showBreak();
     }

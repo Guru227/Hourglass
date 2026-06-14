@@ -1,13 +1,34 @@
 /* ===========================================================================
-   Hourglass — retro overlay styling
-   Theme tokens are swapped by toggling <html data-theme="dark|light">.
+   Hourglass — overlay styling
+   Theme tokens are swapped by toggling <html data-theme="crt|dark|light">.
+   "crt" is the default: minimalist phosphor-green on space grey.
    =========================================================================== */
 
 :root {
   --font-pixel: "Courier New", "Lucida Console", Monaco, monospace;
 }
 
-/* ---- Dark mode (default) ---- */
+/* ---- CRT green (default) ---------------------------------------------- */
+[data-theme="crt"] {
+  --backdrop:      rgba(20, 23, 28, 0.95);   /* space grey, near-opaque */
+  --card-bg:       transparent;              /* content floats on the wash */
+  --card-border:   transparent;
+  --card-glow:     rgba(77, 255, 145, 0.35);
+  --fg:            #57ff97;                   /* phosphor green            */
+  --fg-dim:        #2f9d63;                   /* dim green                 */
+  --accent:        #6effa9;
+  --accent-2:      #36c97e;
+  --btn-bg:        rgba(87, 255, 151, 0.06);
+  --btn-bg-hover:  rgba(87, 255, 151, 0.16);
+  --btn-fg:        #57ff97;
+  --btn-primary-bg:rgba(87, 255, 151, 0.10);
+  --btn-primary-fg:#7dffb0;
+  --sand:          #57ff97;
+  --glass:         #2f9d63;
+  --mono:          1;                          /* sprites render monochrome */
+}
+
+/* ---- Dark ------------------------------------------------------------- */
 [data-theme="dark"] {
   --backdrop:      rgba(8, 10, 18, 0.72);
   --card-bg:       #16182a;
@@ -15,8 +36,8 @@
   --card-glow:     rgba(120, 130, 255, 0.35);
   --fg:            #e8eaff;
   --fg-dim:        #9aa0d0;
-  --accent:        #ff4d6d;   /* retro arcade red/pink */
-  --accent-2:      #4dd2ff;   /* retro cyan            */
+  --accent:        #ff4d6d;
+  --accent-2:      #4dd2ff;
   --btn-bg:        #23263f;
   --btn-bg-hover:  #2f3458;
   --btn-fg:        #e8eaff;
@@ -24,9 +45,10 @@
   --btn-primary-fg:#16182a;
   --sand:          #ffd166;
   --glass:         #4dd2ff;
+  --mono:          0;
 }
 
-/* ---- Light mode ---- */
+/* ---- Light ------------------------------------------------------------ */
 [data-theme="light"] {
   --backdrop:      rgba(220, 224, 240, 0.65);
   --card-bg:       #f4f5fb;
@@ -43,6 +65,7 @@
   --btn-primary-fg:#ffffff;
   --sand:          #e0a83a;
   --glass:         #1098ad;
+  --mono:          0;
 }
 
 * { box-sizing: border-box; }
@@ -53,14 +76,14 @@ html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: transparent;          /* let the Tauri window show through */
+  background: transparent;
   font-family: var(--font-pixel);
   -webkit-user-select: none;
   user-select: none;
   cursor: default;
 }
 
-/* Full-screen dim layer — this is the "renders your screen useless" effect */
+/* Full-screen wash — takes over the whole display */
 .overlay {
   position: fixed;
   inset: 0;
@@ -74,40 +97,53 @@ html, body {
 /* The break card */
 .card {
   position: relative;
-  width: min(820px, 86vw);
-  padding: 32px 40px 36px;
+  width: min(900px, 90vw);
+  padding: 28px 40px 30px;
   border: 3px solid var(--card-border);
   border-radius: 14px;
   background: var(--card-bg);
   color: var(--fg);
-  box-shadow:
-    0 0 0 2px #000,
-    0 0 40px var(--card-glow),
-    0 18px 60px rgba(0, 0, 0, 0.55);
-  overflow: hidden;
+  text-align: center;
   animation: pop-in 240ms cubic-bezier(.2,.9,.3,1.4);
+}
+/* dark/light get the arcade card chrome; crt stays bare */
+[data-theme="dark"] .card,
+[data-theme="light"] .card {
+  box-shadow: 0 0 0 2px #000, 0 0 40px var(--card-glow), 0 18px 60px rgba(0,0,0,.55);
 }
 
 @keyframes pop-in {
-  from { transform: scale(.88); opacity: 0; }
+  from { transform: scale(.92); opacity: 0; }
   to   { transform: scale(1);   opacity: 1; }
 }
 
-/* Top row: [sprite] [text] [sprite] */
+/* Hourglass at the top */
+.center-stage {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 14px;
+}
+#hourglass {
+  width: 96px;
+  height: 136px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  filter: drop-shadow(0 0 10px var(--card-glow));
+}
+
+/* Middle row: [sprite] [text] [sprite] */
 .hero {
   display: grid;
   grid-template-columns: 160px 1fr 160px;
   align-items: center;
   gap: 16px;
 }
-
 .sprite {
   width: 160px;
   height: 220px;
-  image-rendering: pixelated;          /* keep the 8-bit crispness */
+  image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
-
 .text { text-align: center; }
 
 .heading {
@@ -116,8 +152,10 @@ html, body {
   font-weight: 700;
   letter-spacing: 2px;
   color: var(--accent);
-  text-shadow: 3px 3px 0 #000, 0 0 18px var(--card-glow);
 }
+[data-theme="dark"] .heading,
+[data-theme="light"] .heading { text-shadow: 3px 3px 0 #000, 0 0 18px var(--card-glow); }
+[data-theme="crt"] .heading { color: var(--fg); text-shadow: 0 0 10px var(--card-glow); }
 
 .body {
   margin: 0;
@@ -126,28 +164,13 @@ html, body {
   letter-spacing: 1px;
 }
 
-/* Center pixel hourglass */
-.center-stage {
-  display: flex;
-  justify-content: center;
-  margin: 18px 0 22px;
-}
-
-#hourglass {
-  width: 120px;
-  height: 170px;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-  filter: drop-shadow(0 0 14px var(--card-glow));
-}
-
 /* Buttons */
 .buttons {
   display: flex;
   gap: 16px;
   justify-content: center;
+  margin-top: 20px;
 }
-
 .btn {
   font-family: var(--font-pixel);
   font-size: 18px;
@@ -158,30 +181,50 @@ html, body {
   border-radius: 8px;
   cursor: pointer;
   transition: background 120ms, transform 80ms, opacity 120ms;
-  box-shadow: 0 4px 0 #000;
 }
-.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #000; }
+[data-theme="dark"] .btn,
+[data-theme="light"] .btn { box-shadow: 0 4px 0 #000; }
+.btn:active { transform: translateY(2px); }
 
 .btn-primary { background: var(--btn-primary-bg); color: var(--btn-primary-fg); }
-.btn-primary:hover:not(:disabled) { filter: brightness(1.1); }
-.btn-primary:disabled {
-  background: var(--btn-bg);
-  color: var(--fg-dim);
-  cursor: not-allowed;
-  box-shadow: 0 4px 0 #000;
-  opacity: 0.85;
-}
-
+.btn-primary:hover:not(:disabled) { filter: brightness(1.12); }
+.btn-primary:disabled { color: var(--fg-dim); cursor: not-allowed; opacity: .8; }
 .btn-ghost { background: var(--btn-bg); color: var(--btn-fg); }
 .btn-ghost:hover { background: var(--btn-bg-hover); }
 
-.countdown { margin-left: 8px; opacity: 0.9; }
+/* crt buttons: thin green outline, no black arcade shadow */
+[data-theme="crt"] .btn {
+  border-color: var(--fg);
+  border-width: 2px;
+  border-radius: 4px;
+  background: var(--btn-bg);
+  color: var(--fg);
+  text-shadow: 0 0 6px var(--card-glow);
+}
+[data-theme="crt"] .btn-primary { background: var(--btn-primary-bg); color: var(--btn-primary-fg); }
+[data-theme="crt"] .btn-primary:disabled { border-color: var(--fg-dim); color: var(--fg-dim); }
+[data-theme="crt"] .btn:hover:not(:disabled) { background: var(--btn-bg-hover); }
+
+.countdown { margin-left: 8px; opacity: .9; }
 .countdown:empty { margin-left: 0; }
 
-/* CRT scanline overlay across the whole card */
+/* Bottom rotating factoid / quote */
+.factoid {
+  margin: 22px auto 0;
+  max-width: 760px;
+  min-height: 1.4em;
+  font-size: clamp(12px, 1.6vw, 16px);
+  font-style: italic;
+  letter-spacing: .5px;
+  color: var(--fg-dim);
+  opacity: .9;
+}
+[data-theme="crt"] .factoid { text-shadow: 0 0 6px var(--card-glow); }
+
+/* CRT scanline overlay */
 .scanlines {
   pointer-events: none;
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: repeating-linear-gradient(
     to bottom,
@@ -191,5 +234,20 @@ html, body {
     transparent 4px
   );
   mix-blend-mode: multiply;
-  opacity: 0.5;
+  opacity: .5;
+}
+
+/* subtle phosphor flicker, crt only */
+.crt-flicker {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  background: var(--fg);
+  opacity: 0;
+}
+[data-theme="crt"] .crt-flicker { animation: flicker 6s infinite steps(60); }
+@keyframes flicker {
+  0%, 97%, 100% { opacity: 0; }
+  98%           { opacity: 0.025; }
+  99%           { opacity: 0.012; }
 }
