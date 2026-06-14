@@ -1,0 +1,14 @@
+{
+  "name": "hourglass",
+  "version": "0.2.0",
+  "description": "A retro desktop break-reminder timer (Tauri rewrite)",
+  "private": true,
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

@@ -1,0 +1,195 @@
+/* ===========================================================================
+   Hourglass — retro overlay styling
+   Theme tokens are swapped by toggling <html data-theme="dark|light">.
+   =========================================================================== */
+
+:root {
+  --font-pixel: "Courier New", "Lucida Console", Monaco, monospace;
+}
+
+/* ---- Dark mode (default) ---- */
+[data-theme="dark"] {
+  --backdrop:      rgba(8, 10, 18, 0.72);
+  --card-bg:       #16182a;
+  --card-border:   #3a3f66;
+  --card-glow:     rgba(120, 130, 255, 0.35);
+  --fg:            #e8eaff;
+  --fg-dim:        #9aa0d0;
+  --accent:        #ff4d6d;   /* retro arcade red/pink */
+  --accent-2:      #4dd2ff;   /* retro cyan            */
+  --btn-bg:        #23263f;
+  --btn-bg-hover:  #2f3458;
+  --btn-fg:        #e8eaff;
+  --btn-primary-bg:#ff4d6d;
+  --btn-primary-fg:#16182a;
+  --sand:          #ffd166;
+  --glass:         #4dd2ff;
+}
+
+/* ---- Light mode ---- */
+[data-theme="light"] {
+  --backdrop:      rgba(220, 224, 240, 0.65);
+  --card-bg:       #f4f5fb;
+  --card-border:   #c2c7e6;
+  --card-glow:     rgba(90, 100, 220, 0.25);
+  --fg:            #1c1e33;
+  --fg-dim:        #5a5f80;
+  --accent:        #d6336c;
+  --accent-2:      #1098ad;
+  --btn-bg:        #ffffff;
+  --btn-bg-hover:  #e6e8f5;
+  --btn-fg:        #1c1e33;
+  --btn-primary-bg:#d6336c;
+  --btn-primary-fg:#ffffff;
+  --sand:          #e0a83a;
+  --glass:         #1098ad;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;          /* let the Tauri window show through */
+  font-family: var(--font-pixel);
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+
+/* Full-screen dim layer — this is the "renders your screen useless" effect */
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--backdrop);
+  backdrop-filter: blur(2px);
+}
+
+/* The break card */
+.card {
+  position: relative;
+  width: min(820px, 86vw);
+  padding: 32px 40px 36px;
+  border: 3px solid var(--card-border);
+  border-radius: 14px;
+  background: var(--card-bg);
+  color: var(--fg);
+  box-shadow:
+    0 0 0 2px #000,
+    0 0 40px var(--card-glow),
+    0 18px 60px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  animation: pop-in 240ms cubic-bezier(.2,.9,.3,1.4);
+}
+
+@keyframes pop-in {
+  from { transform: scale(.88); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+/* Top row: [sprite] [text] [sprite] */
+.hero {
+  display: grid;
+  grid-template-columns: 160px 1fr 160px;
+  align-items: center;
+  gap: 16px;
+}
+
+.sprite {
+  width: 160px;
+  height: 220px;
+  image-rendering: pixelated;          /* keep the 8-bit crispness */
+  image-rendering: crisp-edges;
+}
+
+.text { text-align: center; }
+
+.heading {
+  margin: 0 0 8px;
+  font-size: clamp(28px, 5vw, 54px);
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--accent);
+  text-shadow: 3px 3px 0 #000, 0 0 18px var(--card-glow);
+}
+
+.body {
+  margin: 0;
+  font-size: clamp(16px, 2.4vw, 26px);
+  color: var(--fg-dim);
+  letter-spacing: 1px;
+}
+
+/* Center pixel hourglass */
+.center-stage {
+  display: flex;
+  justify-content: center;
+  margin: 18px 0 22px;
+}
+
+#hourglass {
+  width: 120px;
+  height: 170px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  filter: drop-shadow(0 0 14px var(--card-glow));
+}
+
+/* Buttons */
+.buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.btn {
+  font-family: var(--font-pixel);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 14px 26px;
+  border: 3px solid #000;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 120ms, transform 80ms, opacity 120ms;
+  box-shadow: 0 4px 0 #000;
+}
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #000; }
+
+.btn-primary { background: var(--btn-primary-bg); color: var(--btn-primary-fg); }
+.btn-primary:hover:not(:disabled) { filter: brightness(1.1); }
+.btn-primary:disabled {
+  background: var(--btn-bg);
+  color: var(--fg-dim);
+  cursor: not-allowed;
+  box-shadow: 0 4px 0 #000;
+  opacity: 0.85;
+}
+
+.btn-ghost { background: var(--btn-bg); color: var(--btn-fg); }
+.btn-ghost:hover { background: var(--btn-bg-hover); }
+
+.countdown { margin-left: 8px; opacity: 0.9; }
+.countdown:empty { margin-left: 0; }
+
+/* CRT scanline overlay across the whole card */
+.scanlines {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.16) 0px,
+    rgba(0, 0, 0, 0.16) 1px,
+    transparent 2px,
+    transparent 4px
+  );
+  mix-blend-mode: multiply;
+  opacity: 0.5;
+}
