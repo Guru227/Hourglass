@@ -83,16 +83,16 @@ fn read_or_init_config(app: &AppHandle) -> Config {
 /// Show the break overlay as a genuine, sticky, always-on-top fullscreen window.
 /// Setting the monitor size/position explicitly is the reliable path on Wayland,
 /// where `fullscreen` alone can degrade to a tiny window at the origin.
-fn show_overlay(app: &AppHandle) {
+async fn show_overlay(app: &AppHandle) {
     if let Some(win) = app.get_webview_window("main") {
-        if let Ok(Some(monitor)) = win.current_monitor() {
-            let _ = win.set_size(*monitor.size());
-            let _ = win.set_position(*monitor.position());
-        }
+        // Show (map) first, then let the window realize before applying state.
+        // The very first state call after show() otherwise loses a race and is
+        // dropped — observed: fullscreen failed while later above/sticky stuck.
+        let _ = win.show();
+        tokio::time::sleep(Duration::from_millis(200)).await;
         let _ = win.set_fullscreen(true);
         let _ = win.set_always_on_top(true);
         let _ = win.set_visible_on_all_workspaces(true);
-        let _ = win.show();
         let _ = win.set_focus();
     }
 }
@@ -190,6 +190,23 @@ fn build_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn main() {
+    // Run through XWayland on GNOME/Wayland. Native Wayland forbids clients from
+    // self-positioning, forcing always-on-top, or sticking a window to all
+    // workspaces; under X11 (XWayland) all three work. Must happen before any
+    // GTK init. Respects an explicit user GDK_BACKEND and only kicks in when
+    // XWayland (DISPLAY) is actually available.
+    #[cfg(target_os = "linux")]
+    {
+        let on_wayland = std::env::var("WAYLAND_DISPLAY").is_ok()
+            || std::env::var("XDG_SESSION_TYPE")
+                .map(|v| v.contains("wayland"))
+                .unwrap_or(false);
+        let xwayland_present = std::env::var("DISPLAY").is_ok();
+        if on_wayland && xwayland_present && std::env::var("GDK_BACKEND").is_err() {
+            std::env::set_var("GDK_BACKEND", "x11");
+        }
+    }
+
     tauri::Builder::default()
         .setup(|app| {
             let handle = app.handle().clone();
@@ -233,7 +250,7 @@ fn main() {
                     }
 
                     in_break.store(true, Ordering::SeqCst);
-                    show_overlay(&h);
+                    show_overlay(&h).await;
                     let _ = h.emit("break-start", ());
                     resume.notified().await;
                     in_break.store(false, Ordering::SeqCst);
