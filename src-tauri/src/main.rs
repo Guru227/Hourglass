@@ -250,6 +250,13 @@ fn main() {
             close_settings,
             quit_app
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running Hourglass");
+        .build(tauri::generate_context!())
+        .expect("error while building Hourglass")
+        .run(|_app, event| {
+            // Keep Hourglass alive in the tray even with no visible windows.
+            // Explicit app.exit() (tray "Quit" / "Stop the timer") still exits.
+            if let tauri::RunEvent::ExitRequested { api, .. } = event {
+                api.prevent_exit();
+            }
+        });
 }
