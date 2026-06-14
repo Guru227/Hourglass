@@ -2,41 +2,57 @@
 
 ~ A desktop break-reminder timer. Every *work period* it throws a full-screen,
 always-on-top overlay over everything you're doing and makes you take a break —
-with a dark retro theme, a center pixel-art hourglass dropping sand, and little
-animated 8-bit athletes doing jumping jacks, squats, stretches and pushups on
-either side of the message.
+a minimalist CRT-green look, a pixel-art hourglass dropping sand at the top, and
+little animated 8-bit athletes doing jumping jacks, squats, stretches and pushups
+on either side of the message.
 
 > **v2 rewrite.** The original was a Java/Swing app (kept in [`legacy-java/`](legacy-java/)).
 > It's been rebuilt as a [Tauri](https://tauri.app) app — a tiny native Rust
 > shell hosting a web UI — because SVG, pixel animation and theming are native
 > territory for HTML/CSS/Canvas and were awkward in Swing.
 
-## What it looks like
+## The break overlay
 
-```
-████████████████ whole screen, space-grey dim ████████████████
-█                          ⧗  (sand falling)                  █
-█    [jacks]            Up you go!            [pushup]         █
-█                      Time to stretch                        █
-█           [ I'm Done stretching! (5s) ] [ Stop ]            █
-█        "Rest is not idleness. — John Lubbock"               █
-███████████████████████████████████████████████████████████████
-```
+![Hourglass break overlay — CRT-green fullscreen reminder](docs/screenshots/break-overlay.png)
 
-- **CRT-green minimalist theme** (default): phosphor green on space grey, with
-  scanlines + a faint flicker. `dark` (arcade) and `light` themes also ship.
-- **Genuine fullscreen overlay**, always-on-top and **sticky across virtual
-  desktops** — it follows you when you switch workspaces.
+When a break is due, Hourglass takes over the whole screen so you actually step
+away. The default look is a minimalist **CRT phosphor-green on space grey**, with
+scanlines and a faint flicker.
+
 - **Pixel hourglass at the top**, with draining/filling sand + falling grains.
-- **Flanking 8-bit exercise sprites** (jacks/squat/stretch/pushup), drawn
-  procedurally (no image assets); left/right are phase-shifted and reversed.
-- **Rotating factoid / quote** at the bottom — health one-liners and quotes from
-  great thinkers (`content_mode`: `both` | `factoids` | `quotes`).
-- **Tray icon** (Ubuntu top bar) → **Settings…**, **Take a break now**,
-  **Pause / Resume**, **Quit**. The settings window edits durations, content
-  mode, theme and messages, applied live.
-- The **"I'm done" button is disabled for the break duration** — same forced-break
-  behaviour as the original.
+- **Flanking 8-bit exercise sprites** (jacks / squat / stretch / pushup), drawn
+  procedurally — no image assets; left and right are phase-shifted and reversed
+  so they're never doing the same move.
+- **Heading + body message** in the middle (both editable).
+- **"I'm Done" button is disabled for the break duration** (the countdown in
+  brackets) — the same forced-break nudge as the original Java app. **"Stop the
+  timer"** quits.
+- **Rotating factoid / quote** along the bottom — health one-liners about why
+  breaks help your body, mind and brain, plus quotes from great thinkers.
+
+It's a **genuine fullscreen overlay, always-on-top, and sticky across virtual
+desktops** — it follows you when you switch workspaces. On GNOME/Wayland the app
+runs through XWayland to make those behaviours work (see
+[How it works](#how-it-works)). `dark` (arcade) and `light` themes also ship and
+are selectable in settings.
+
+## Tray & settings
+
+Hourglass lives in the system tray (the Ubuntu top bar). Left-click the
+hourglass icon for the menu: **Settings…**, **Take a break now**,
+**Pause / Resume**, and **Quit**. It stays resident in the tray until you Quit.
+
+![Hourglass settings window](docs/screenshots/settings.png)
+
+The **Settings** window edits everything and applies it live (no restart):
+
+- **Time between breaks** (minutes) and **Break length** (seconds).
+- **Bottom line content** — `Both`, `Factoids`, or `Quotes`.
+- **Theme** — CRT green (default), Dark (arcade), or Light.
+- The **heading / body** messages and the **two button labels**.
+
+Changes are written to the config file (below) and pushed to a running overlay
+immediately via a `config-updated` event.
 
 ## How it works
 
