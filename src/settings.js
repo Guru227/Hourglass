@@ -3,7 +3,16 @@
   "use strict";
   const T = window.__TAURI__;
   const invoke = T ? T.core.invoke : null;
+  const listen = T ? T.event.listen : null;
   const el = (id) => document.getElementById(id);
+
+  let paused = false;
+  function renderStatus(p) {
+    paused = !!p;
+    el("statusbar").classList.toggle("paused", paused);
+    el("statusText").textContent = paused ? "Paused" : "Running";
+    el("pauseBtn").textContent = paused ? "Resume" : "Pause";
+  }
 
   function setTheme(theme) {
     document.documentElement.setAttribute(
@@ -54,9 +63,18 @@
     if (invoke) await invoke("close_settings");
   });
 
+  el("pauseBtn").addEventListener("click", async () => {
+    if (!invoke) return;
+    renderStatus(!paused);                 // optimistic; event confirms
+    await invoke("set_paused", { paused });
+  });
+
   async function boot() {
     if (invoke) {
       try { populate(await invoke("load_config")); } catch (e) { console.error(e); }
+      try { renderStatus(await invoke("is_paused")); } catch (e) {}
+      // Stay in sync if pause is toggled from the tray while this is open.
+      await listen("pause-changed", (e) => renderStatus(e.payload));
     }
   }
   if (document.readyState === "loading") {

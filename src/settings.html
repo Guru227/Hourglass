@@ -46,10 +46,26 @@
     .actions { display: flex; gap: 12px; margin-top: 22px; }
     .actions .btn { flex: 1; font-size: 16px; padding: 12px; }
     .hint { font-size: 11px; color: var(--fg-dim); margin-top: 4px; opacity: .8; }
+    .statusbar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; margin-bottom: 18px;
+      border: 2px solid var(--fg-dim); border-radius: 8px;
+    }
+    .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--fg);
+           box-shadow: 0 0 8px var(--card-glow); flex: 0 0 auto; }
+    .statusbar.paused .dot { background: var(--fg-dim); box-shadow: none; }
+    #statusText { font-size: 14px; letter-spacing: .5px; }
+    .statusbar .btn { margin-left: auto; font-size: 13px; padding: 7px 16px; }
   </style>
 </head>
 <body>
   <h1>⧗ Hourglass Settings</h1>
+
+  <div class="statusbar" id="statusbar">
+    <span class="dot"></span>
+    <span id="statusText">Running</span>
+    <button class="btn btn-ghost" id="pauseBtn">Pause</button>
+  </div>
 
   <div class="row">
     <div class="field">

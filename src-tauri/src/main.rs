@@ -9,9 +9,9 @@ use std::sync::Mutex;
 use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
-use tauri::menu::{MenuBuilder, MenuItemBuilder};
+use tauri::menu::{MenuBuilder, MenuItem, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
-use tauri::{AppHandle, Emitter, Manager, State};
+use tauri::{AppHandle, Emitter, Manager, State, Wry};
 use tokio::sync::Notify;
 
 /// User-editable settings, stored as JSON in the OS config dir
@@ -57,6 +57,10 @@ struct AppState {
     resume_pause: Arc<Notify>, // unpause signal
     paused: Arc<AtomicBool>,
     in_break: Arc<AtomicBool>,
+    // Tray menu handles, filled in after the tray is built, so pause state can
+    // be reflected live in the menu.
+    pause_item: Mutex<Option<MenuItem<Wry>>>,
+    status_item: Mutex<Option<MenuItem<Wry>>>,
 }
 
 fn config_path(app: &AppHandle) -> PathBuf {
@@ -141,17 +145,66 @@ fn quit_app(app: AppHandle) {
     app.exit(0);
 }
 
+/// Single place that flips pause state and reflects it everywhere: the break
+/// loop, the tray (menu label + status line + tooltip), and a `pause-changed`
+/// event the settings window listens to.
+fn set_pause(app: &AppHandle, paused: bool) {
+    let state = app.state::<AppState>();
+    state.paused.store(paused, Ordering::SeqCst);
+    if !paused {
+        state.resume_pause.notify_one();
+    }
+    if let Some(item) = state.pause_item.lock().unwrap().as_ref() {
+        let _ = item.set_text(if paused { "Resume" } else { "Pause" });
+    }
+    if let Some(item) = state.status_item.lock().unwrap().as_ref() {
+        let _ = item.set_text(if paused { "‖ Paused" } else { "● Running" });
+    }
+    if let Some(tray) = app.tray_by_id("tray") {
+        let _ = tray.set_tooltip(Some(if paused {
+            "Hourglass — paused"
+        } else {
+            "Hourglass"
+        }));
+    }
+    let _ = app.emit("pause-changed", paused);
+}
+
+#[tauri::command]
+fn is_paused(state: State<AppState>) -> bool {
+    state.paused.load(Ordering::SeqCst)
+}
+
+#[tauri::command]
+fn set_paused(app: AppHandle, paused: bool) {
+    set_pause(&app, paused);
+}
+
 fn build_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
+    // Non-clickable status line at the top reflects paused/running at a glance.
+    let status_i = MenuItemBuilder::with_id("status", "● Running")
+        .enabled(false)
+        .build(app)?;
     let settings_i = MenuItemBuilder::with_id("settings", "Settings…").build(app)?;
     let break_i = MenuItemBuilder::with_id("break", "Take a break now").build(app)?;
-    let pause_i = MenuItemBuilder::with_id("pause", "Pause / Resume").build(app)?;
+    let pause_i = MenuItemBuilder::with_id("pause", "Pause").build(app)?;
     let quit_i = MenuItemBuilder::with_id("quit", "Quit Hourglass").build(app)?;
     let menu = MenuBuilder::new(app)
+        .item(&status_i)
+        .separator()
         .item(&settings_i)
         .item(&break_i)
         .item(&pause_i)
+        .separator()
         .item(&quit_i)
         .build()?;
+
+    // Keep handles so set_pause() can update the labels live.
+    {
+        let state = app.state::<AppState>();
+        *state.pause_item.lock().unwrap() = Some(pause_i.clone());
+        *state.status_item.lock().unwrap() = Some(status_i.clone());
+    }
 
     let mut builder = TrayIconBuilder::with_id("tray")
         .tooltip("Hourglass")
@@ -176,10 +229,7 @@ fn build_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                 }
                 "pause" => {
                     let now = !state.paused.load(Ordering::SeqCst);
-                    state.paused.store(now, Ordering::SeqCst);
-                    if !now {
-                        state.resume_pause.notify_one();
-                    }
+                    set_pause(app, now);
                 }
                 "quit" => app.exit(0),
                 _ => {}
@@ -208,6 +258,15 @@ fn main() {
     }
 
     tauri::Builder::default()
+        // Must be the first plugin: a second launch (autostart + manual click)
+        // is funnelled into the already-running instance instead of spawning a
+        // duplicate tray icon / overlay.
+        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            if let Some(win) = app.get_webview_window("settings") {
+                let _ = win.show();
+                let _ = win.set_focus();
+            }
+        }))
         .setup(|app| {
             let handle = app.handle().clone();
             let config = read_or_init_config(&handle);
@@ -225,6 +284,8 @@ fn main() {
                 resume_pause: resume_pause.clone(),
                 paused: paused.clone(),
                 in_break: in_break.clone(),
+                pause_item: Mutex::new(None),
+                status_item: Mutex::new(None),
             });
 
             build_tray(&handle)?;
@@ -265,7 +326,9 @@ fn main() {
             break_done,
             open_settings,
             close_settings,
-            quit_app
+            quit_app,
+            is_paused,
+            set_paused
         ])
         .build(tauri::generate_context!())
         .expect("error while building Hourglass")

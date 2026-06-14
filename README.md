@@ -39,12 +39,17 @@ are selectable in settings.
 ## Tray & settings
 
 Hourglass lives in the system tray (the Ubuntu top bar). Left-click the
-hourglass icon for the menu: **Settings…**, **Take a break now**,
-**Pause / Resume**, and **Quit**. It stays resident in the tray until you Quit.
+hourglass icon for the menu, which opens with a **status line — `● Running` or
+`‖ Paused`** — then **Settings…**, **Take a break now**, **Pause / Resume**
+(the label flips to match the current state, as does the tray tooltip), and
+**Quit**. It stays resident in the tray until you Quit, and only one instance
+ever runs (a second launch just re-focuses Settings).
 
 ![Hourglass settings window](docs/screenshots/settings.png)
 
-The **Settings** window edits everything and applies it live (no restart):
+The **Settings** window shows the same **Running / Paused** status with its own
+Pause/Resume button (kept in sync with the tray), and edits everything live (no
+restart):
 
 - **Time between breaks** (minutes) and **Break length** (seconds).
 - **Bottom line content** — `Both`, `Factoids`, or `Quotes`.
@@ -52,7 +57,8 @@ The **Settings** window edits everything and applies it live (no restart):
 - The **heading / body** messages and the **two button labels**.
 
 Changes are written to the config file (below) and pushed to a running overlay
-immediately via a `config-updated` event.
+immediately via a `config-updated` event; pause changes broadcast a
+`pause-changed` event so the tray and Settings always agree.
 
 ## How it works
 
@@ -100,7 +106,29 @@ relaunch. (Older files with `dark_mode` still load — unknown fields are ignore
 > extension, which Ubuntu ships and enables by default. On vanilla GNOME you may
 > need the "AppIndicator and KStatusNotifier" extension for the icon to appear.
 
-## Building & running
+## Install & run on startup
+
+A user-local installer (no `sudo`) builds the release binary and wires it up to
+start with your session:
+
+```bash
+./install.sh                 # build + install, and run automatically on login
+./install.sh --no-autostart  # install without the login autostart entry
+./uninstall.sh               # remove it all
+```
+
+`install.sh` places:
+
+- the binary at `~/.local/bin/hourglass`,
+- an app-menu launcher at `~/.local/share/applications/hourglass.desktop`,
+- (unless `--no-autostart`) a login entry at `~/.config/autostart/hourglass.desktop`.
+
+After install, Hourglass starts on each login, sits in the tray, and pops the
+break overlay every work period. (First build uses the release LTO profile, so
+it takes a few minutes; it needs the prerequisites below — but no Node, since the
+web assets are embedded in the binary.) `uninstall.sh` leaves your config intact.
+
+## Building & running (development)
 
 ### 1. System prerequisites (Linux)
 
@@ -136,13 +164,16 @@ immediately and loops a fake work period on dismiss).
 ## Project layout
 
 ```
-src/                 frontend (index.html, styles.css, main.js, sprites.js)
+src/                 frontend (index.html, settings.html, *.js, styles.css, sprites/content)
 src-tauri/           Rust shell (Cargo.toml, tauri.conf.json, src/main.rs, capabilities/, icons/)
+install.sh           user-local installer + login autostart
+uninstall.sh         remove the install
+docs/screenshots/    README images
 legacy-java/         the original Java/Swing version, preserved
 ```
 
 ## Yet to be implemented
 
-- Multiple configurable hourglasses with custom messages.
-- A GUI settings panel (currently config is the JSON file).
-- System-tray controls (pause / snooze / quit).
+- Multiple configurable hourglasses with different messages/schedules.
+- A "snooze" action (postpone a break by N minutes).
+- Per-monitor overlay on multi-display setups.
