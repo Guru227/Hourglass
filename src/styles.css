@@ -173,6 +173,17 @@ html, body {
   justify-content: center;
   margin-top: 20px;
 }
+
+/* Bottom-right corner pause button (pauses reminders + closes the popup) */
+.btn-corner {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  padding: 8px 14px;
+  font-size: 14px;
+  opacity: 0.85;
+}
+.btn-corner:hover { opacity: 1; }
 .btn {
   font-family: var(--font-pixel);
   font-size: 18px;
@@ -210,10 +221,10 @@ html, body {
 .countdown { margin-left: 8px; opacity: .9; }
 .countdown:empty { margin-left: 0; }
 
-/* Bottom rotating factoid / quote */
+/* Bottom rotating factoid / quote (kept narrow so the corner Pause never overlaps it) */
 .factoid {
   margin: 22px auto 0;
-  max-width: 760px;
+  max-width: 560px;
   min-height: 1.4em;
   font-size: clamp(12px, 1.6vw, 16px);
   font-style: italic;

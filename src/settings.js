@@ -31,7 +31,6 @@
     el("heading").value = c.msg_heading;
     el("bodymsg").value = c.msg_body;
     el("quitmsg").value = c.quit_button_msg;
-    el("termsg").value = c.terminate_button_msg;
     setTheme(c.theme);
   }
 
@@ -47,7 +46,6 @@
       msg_heading: el("heading").value,
       msg_body: el("bodymsg").value,
       quit_button_msg: el("quitmsg").value,
-      terminate_button_msg: el("termsg").value,
     };
   }
 

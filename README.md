@@ -25,8 +25,10 @@ scanlines and a faint flicker.
   so they're never doing the same move.
 - **Heading + body message** in the middle (both editable).
 - **"I'm Done" button is disabled for the break duration** (the countdown in
-  brackets) — the same forced-break nudge as the original Java app. **"Stop the
-  timer"** quits.
+  brackets) — the same forced-break nudge as the original Java app. It's the only
+  button in the center.
+- **A bottom-right "⏸ Pause"** closes the popup and pauses all future breaks until
+  you Resume from the tray or Settings (clickable immediately).
 - **Rotating factoid / quote** along the bottom — health one-liners about why
   breaks help your body, mind and brain, plus quotes from great thinkers.
 
@@ -54,7 +56,7 @@ restart):
 - **Time between breaks** (minutes) and **Break length** (seconds).
 - **Bottom line content** — `Both`, `Factoids`, or `Quotes`.
 - **Theme** — CRT green (default), Dark (arcade), or Light.
-- The **heading / body** messages and the **two button labels**.
+- The **heading / body** messages and the **"Done" button label**.
 
 Changes are written to the config file (below) and pushed to a running overlay
 immediately via a `config-updated` event; pause changes broadcast a
@@ -93,7 +95,6 @@ config dir, e.g. on Linux:
   "msg_heading": "Up you go!",
   "msg_body": "Time to stretch",
   "quit_button_msg": "I'm Done stretching!",
-  "terminate_button_msg": "Stop the timer",
   "theme": "crt",             // "crt" | "dark" | "light"
   "content_mode": "both"      // "both" | "factoids" | "quotes"
 }

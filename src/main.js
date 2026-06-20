@@ -21,7 +21,7 @@
   const quitBtn = el("quitBtn");
   const quitLabel = el("quitLabel");
   const countdownEl = el("countdown");
-  const terminateBtn = el("terminateBtn");
+  const pauseBtn = el("pauseBtn");
   const factoidEl = el("factoid");
 
   let cfg = {
@@ -30,7 +30,6 @@
     msg_heading: "Up you go!",
     msg_body: "Time to stretch",
     quit_button_msg: "I'm Done stretching!",
-    terminate_button_msg: "Stop the timer",
     theme: "crt",
     content_mode: "both",
   };
@@ -45,7 +44,6 @@
     headingEl.textContent = cfg.msg_heading;
     bodyEl.textContent = cfg.msg_body;
     quitLabel.textContent = cfg.quit_button_msg;
-    terminateBtn.textContent = cfg.terminate_button_msg;
   }
 
   function startArt() {
@@ -94,9 +92,15 @@
     }
   });
 
-  terminateBtn.addEventListener("click", async () => {
-    if (invoke) await invoke("quit_app");
-    else overlay.style.display = "none";
+  // Corner Pause: pause all future breaks and close the popup. Available
+  // immediately (not gated by the break countdown). Resume from tray / Settings.
+  pauseBtn.addEventListener("click", async () => {
+    if (invoke) {
+      await invoke("set_paused", { paused: true });
+      await invoke("break_done");
+    } else {
+      overlay.style.display = "none";
+    }
   });
 
   async function boot() {

@@ -27,7 +27,6 @@ struct Config {
     msg_heading: String,
     msg_body: String,
     quit_button_msg: String,
-    terminate_button_msg: String,
     /// "crt" | "dark" | "light"
     theme: String,
     /// "both" | "factoids" | "quotes"
@@ -42,7 +41,6 @@ impl Default for Config {
             msg_heading: "Up you go!".into(),
             msg_body: "Time to stretch".into(),
             quit_button_msg: "I'm Done stretching!".into(),
-            terminate_button_msg: "Stop the timer".into(),
             theme: "crt".into(),
             content_mode: "both".into(),
         }
@@ -333,10 +331,13 @@ fn main() {
         .build(tauri::generate_context!())
         .expect("error while building Hourglass")
         .run(|_app, event| {
-            // Keep Hourglass alive in the tray even with no visible windows.
-            // Explicit app.exit() (tray "Quit" / "Stop the timer") still exits.
-            if let tauri::RunEvent::ExitRequested { api, .. } = event {
-                api.prevent_exit();
+            // Stay resident in the tray when a window is closed/hidden (code:
+            // None), but let an explicit app.exit() (tray "Quit") actually quit.
+            // An unconditional prevent_exit() would swallow app.exit() too.
+            if let tauri::RunEvent::ExitRequested { code, api, .. } = event {
+                if code.is_none() {
+                    api.prevent_exit();
+                }
             }
         });
 }
