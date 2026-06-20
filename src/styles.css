@@ -178,13 +178,14 @@ html, body {
    fullscreen .overlay). Just the ‖ glyph at rest, compact; "Pause" on hover. */
 .btn-corner {
   position: absolute;
-  right: 14px;
-  bottom: 14px;
+  right: 10px;
+  bottom: 10px;
   display: inline-flex;
   align-items: center;
-  padding: 5px 9px;
-  font-size: 12px;
-  opacity: 0.75;
+  padding: 2px 6px;
+  font-size: 10px;
+  border-width: 1px;
+  opacity: 0.7;
 }
 .btn-corner:hover { opacity: 1; }
 .pause-label {
