@@ -39,12 +39,16 @@
       <!-- Bottom: rotating factoid / quote -->
       <p id="factoid" class="factoid"></p>
 
-      <!-- Corner: pause reminders (closes the popup, pauses until you Resume) -->
-      <button id="pauseBtn" class="btn btn-ghost btn-corner" title="Pause reminders — resume from the tray or Settings">‖ Pause</button>
-
       <div class="scanlines" aria-hidden="true"></div>
       <div class="crt-flicker" aria-hidden="true"></div>
     </div>
+
+    <!-- Corner: pause reminders — pinned to the screen's bottom-right corner.
+         Shows just the ‖ glyph at rest; reveals "Pause" on hover. -->
+    <button id="pauseBtn" class="btn btn-ghost btn-corner" aria-label="Pause"
+            title="Pause reminders — resume from the tray or Settings">
+      <span class="pause-icon">‖</span><span class="pause-label">Pause</span>
+    </button>
   </div>
 
   <script src="content.js"></script>

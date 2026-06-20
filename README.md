@@ -27,8 +27,9 @@ scanlines and a faint flicker.
 - **"I'm Done" button is disabled for the break duration** (the countdown in
   brackets) — the same forced-break nudge as the original Java app. It's the only
   button in the center.
-- **A bottom-right "⏸ Pause"** closes the popup and pauses all future breaks until
-  you Resume from the tray or Settings (clickable immediately).
+- **A small "‖" in the screen's bottom-right corner** (it reveals the word
+  "Pause" on hover) closes the popup and pauses all future breaks until you Resume
+  from the tray or Settings (clickable immediately).
 - **Rotating factoid / quote** along the bottom — health one-liners about why
   breaks help your body, mind and brain, plus quotes from great thinkers.
 

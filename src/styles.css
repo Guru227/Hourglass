@@ -174,16 +174,33 @@ html, body {
   margin-top: 20px;
 }
 
-/* Bottom-right corner pause button (pauses reminders + closes the popup) */
+/* Pause button: pinned to the screen's bottom-right corner (child of the
+   fullscreen .overlay). Just the ‖ glyph at rest, compact; "Pause" on hover. */
 .btn-corner {
   position: absolute;
-  right: 18px;
-  bottom: 16px;
-  padding: 8px 14px;
-  font-size: 14px;
-  opacity: 0.85;
+  right: 14px;
+  bottom: 14px;
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  font-size: 12px;
+  opacity: 0.75;
 }
 .btn-corner:hover { opacity: 1; }
+.pause-label {
+  max-width: 0;
+  opacity: 0;
+  margin-left: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: max-width .16s ease, opacity .16s ease, margin-left .16s ease;
+}
+.btn-corner:hover .pause-label,
+.btn-corner:focus-visible .pause-label {
+  max-width: 6em;
+  opacity: 1;
+  margin-left: 8px;
+}
 .btn {
   font-family: var(--font-pixel);
   font-size: 18px;
@@ -221,10 +238,10 @@ html, body {
 .countdown { margin-left: 8px; opacity: .9; }
 .countdown:empty { margin-left: 0; }
 
-/* Bottom rotating factoid / quote (kept narrow so the corner Pause never overlaps it) */
+/* Bottom rotating factoid / quote */
 .factoid {
   margin: 22px auto 0;
-  max-width: 560px;
+  max-width: 720px;
   min-height: 1.4em;
   font-size: clamp(12px, 1.6vw, 16px);
   font-style: italic;
