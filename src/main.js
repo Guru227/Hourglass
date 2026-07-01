@@ -34,6 +34,14 @@
     content_mode: "both",
   };
 
+  // Built-in copy for the two pomodoro break kinds — distinct from the
+  // user-configurable simple-mode stretch message, since "take 5" and "go
+  // stretch" are different asks.
+  const PHASE_COPY = {
+    short_break: { heading: "Short Break", quit: "Back to work" },
+    long_break: { heading: "Long Break — you earned it", quit: "Back to work" },
+  };
+
   let breakTimer = null;
 
   function applyConfig(c) {
@@ -46,6 +54,18 @@
     quitLabel.textContent = cfg.quit_button_msg;
   }
 
+  // Phase-specific copy (pomodoro breaks) overlays the base config text;
+  // simple-mode "break" leaves headingEl/bodyEl/quitLabel exactly as
+  // applyConfig() set them.
+  function applyPhaseCopy(payload) {
+    const copy = PHASE_COPY[payload.phase];
+    if (!copy) return;
+    headingEl.textContent = copy.heading;
+    bodyEl.textContent =
+      `Pomodoro ${payload.cycle} of ${payload.cycles_before_long_break} done`;
+    quitLabel.textContent = copy.quit;
+  }
+
   function startArt() {
     window.HourglassArt.startSprite(el("spriteLeft"), { offset: 0 });
     window.HourglassArt.startSprite(el("spriteRight"), { offset: 0.5, reverse: true });
@@ -56,10 +76,12 @@
     factoidEl.textContent = window.HourglassContent.pick(cfg.content_mode);
   }
 
-  // The forced break: keep the quit button disabled for break_seconds.
-  function beginBreakCountdown() {
+  // The forced break: keep the quit button disabled for durationSeconds.
+  // Pomodoro short/long breaks pass their own duration here (it varies per
+  // occurrence); simple mode passes cfg.break_seconds.
+  function beginBreakCountdown(durationSeconds) {
     if (breakTimer) clearInterval(breakTimer);
-    let remaining = Math.max(0, cfg.break_seconds | 0);
+    let remaining = Math.max(0, durationSeconds | 0);
     quitBtn.disabled = true;
     const tick = () => {
       if (remaining > 0) {
@@ -76,10 +98,16 @@
     breakTimer = setInterval(tick, 1000);
   }
 
-  function showBreak() {
+  function showBreak(payload) {
+    // Reset to the configured simple-mode text, then let pomodoro-specific
+    // copy overlay it when this break is a pomodoro short/long break.
+    headingEl.textContent = cfg.msg_heading;
+    bodyEl.textContent = cfg.msg_body;
+    quitLabel.textContent = cfg.quit_button_msg;
+    if (payload) applyPhaseCopy(payload);
     overlay.style.display = "flex";
     newFactoid();
-    beginBreakCountdown();
+    beginBreakCountdown(payload ? payload.duration_seconds : cfg.break_seconds);
   }
 
   quitBtn.addEventListener("click", async () => {
@@ -108,7 +136,12 @@
     if (invoke) {
       try { applyConfig(await invoke("load_config")); }
       catch (e) { console.error("load_config failed", e); applyConfig(cfg); }
-      await listen("break-start", () => showBreak());
+      // Rust emits phase-changed on every transition (work included, for the
+      // settings window's countdown) — the overlay only reacts when the new
+      // phase isn't "work".
+      await listen("phase-changed", (e) => {
+        if (e.payload && e.payload.phase !== "work") showBreak(e.payload);
+      });
       // Settings window saved changes — re-apply live.
       await listen("config-updated", async () => {
         try { applyConfig(await invoke("load_config")); } catch (e) {}

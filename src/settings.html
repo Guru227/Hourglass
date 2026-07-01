@@ -56,6 +56,31 @@
     .statusbar.paused .dot { background: var(--fg-dim); box-shadow: none; }
     #statusText { font-size: 14px; letter-spacing: .5px; }
     .statusbar .btn { margin-left: auto; font-size: 13px; padding: 7px 16px; }
+    .stat-line {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px; margin-bottom: 18px;
+      border: 2px dashed var(--fg-dim); border-radius: 8px;
+      font-size: 13px; color: var(--fg-dim); letter-spacing: .3px;
+    }
+    .stat-line strong { color: var(--fg); font-weight: normal; }
+    .pomo-status {
+      display: none; /* JS shows this when mode=pomodoro */
+      flex-direction: column; align-items: center; gap: 6px;
+      padding: 16px 12px; margin-bottom: 18px;
+      border: 2px solid var(--fg-dim); border-radius: 8px;
+    }
+    .pomo-status.show { display: flex; }
+    .pomo-phase { font-size: 13px; letter-spacing: 1px; color: var(--fg-dim); text-transform: uppercase; }
+    .pomo-clock { font-size: 34px; font-family: var(--font-pixel); color: var(--fg); }
+    [data-theme="crt"] .pomo-clock { text-shadow: 0 0 8px var(--card-glow); }
+    .pomo-dots { display: flex; gap: 6px; margin-top: 2px; }
+    .pomo-dots .d { width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--fg-dim); }
+    .pomo-dots .d.filled { background: var(--fg); border-color: var(--fg); }
+    .pomo-today { font-size: 11px; color: var(--fg-dim); margin-top: 2px; }
+    /* Simple mode is the default; JS flips this if load_config resolves to
+       pomodoro. Keeps a failed config load showing one coherent field set
+       instead of both stacked. */
+    #pomodoroFields { display: none; }
   </style>
 </head>
 <body>
@@ -67,14 +92,56 @@
     <button class="btn btn-ghost" id="pauseBtn">Pause</button>
   </div>
 
-  <div class="row">
-    <div class="field">
-      <label class="lbl" for="work">Time between breaks (minutes)</label>
-      <input type="number" id="work" min="0.1" step="0.1" />
+  <div class="stat-line">⏱ Screen time today: <strong id="screenTimeStat">—</strong></div>
+
+  <div class="pomo-status" id="pomoStatus">
+    <span class="pomo-phase" id="pomoPhase">Working</span>
+    <span class="pomo-clock" id="pomoClock">25:00</span>
+    <span class="pomo-dots" id="pomoDots"></span>
+    <span class="pomo-today" id="pomoToday">0 pomodoros today</span>
+  </div>
+
+  <div class="field">
+    <label class="lbl">Mode</label>
+    <div class="seg" id="mode">
+      <label><input type="radio" name="mode" value="simple" /><span>Simple</span></label>
+      <label><input type="radio" name="mode" value="pomodoro" /><span>Pomodoro</span></label>
     </div>
-    <div class="field">
-      <label class="lbl" for="brk">Break length (seconds)</label>
-      <input type="number" id="brk" min="1" step="1" />
+  </div>
+
+  <div id="simpleFields">
+    <div class="row">
+      <div class="field">
+        <label class="lbl" for="work">Time between breaks (minutes)</label>
+        <input type="number" id="work" min="0.1" step="0.1" />
+      </div>
+      <div class="field">
+        <label class="lbl" for="brk">Break length (seconds)</label>
+        <input type="number" id="brk" min="1" step="1" />
+      </div>
+    </div>
+  </div>
+
+  <div id="pomodoroFields">
+    <div class="row">
+      <div class="field">
+        <label class="lbl" for="pomoWork">Work session (minutes)</label>
+        <input type="number" id="pomoWork" min="1" step="1" />
+      </div>
+      <div class="field">
+        <label class="lbl" for="pomoShort">Short break (minutes)</label>
+        <input type="number" id="pomoShort" min="0.1" step="0.1" />
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label class="lbl" for="pomoLong">Long break (minutes)</label>
+        <input type="number" id="pomoLong" min="0.1" step="0.1" />
+      </div>
+      <div class="field">
+        <label class="lbl" for="pomoCycles">Work sessions before long break</label>
+        <input type="number" id="pomoCycles" min="1" step="1" />
+      </div>
     </div>
   </div>
 
