@@ -22,8 +22,11 @@
   }
 
   function showModeFields(mode) {
-    el("simpleFields").style.display = mode === "pomodoro" ? "none" : "";
-    el("pomodoroFields").style.display = mode === "pomodoro" ? "" : "none";
+    // Explicit "block" (not "") on both branches — an empty string just
+    // clears the inline style and defers to the stylesheet, which sets
+    // #pomodoroFields to display:none by default (see settings.html).
+    el("simpleFields").style.display = mode === "pomodoro" ? "none" : "block";
+    el("pomodoroFields").style.display = mode === "pomodoro" ? "block" : "none";
   }
 
   function populate(c) {
