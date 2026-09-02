@@ -145,6 +145,20 @@
     </div>
   </div>
 
+  <!-- Applies to both modes, so it sits outside the mode-specific blocks. -->
+  <div class="row">
+    <div class="field">
+      <label class="lbl" for="nudgeAfter">Nudge if paused for (minutes)</label>
+      <input type="number" id="nudgeAfter" min="0" step="1" />
+      <div class="hint">0 = never nudge</div>
+    </div>
+    <div class="field">
+      <label class="lbl" for="nudgeSnooze">Snooze length (minutes)</label>
+      <input type="number" id="nudgeSnooze" min="1" step="1" />
+      <div class="hint">Also the re-nudge interval</div>
+    </div>
+  </div>
+
   <div class="field">
     <label class="lbl">Bottom line content</label>
     <div class="seg" id="content">

@@ -51,7 +51,14 @@ EOF
   exit 1
 fi
 
-BUILT="$ROOT/src-tauri/target/release/hourglass"
+# --- locate the built binary ---
+# The build directory is not always src-tauri/target: a shared build.target-dir
+# (see ~/.cargo/config.toml) or CARGO_TARGET_DIR relocates it. Ask cargo where
+# it actually wrote things, and fall back to the in-tree default.
+TARGET_DIR="$(cargo metadata --format-version 1 --no-deps \
+  --manifest-path "$ROOT/src-tauri/Cargo.toml" 2>/dev/null \
+  | grep -o '"target_directory":"[^"]*"' | head -1 | cut -d'"' -f4)"
+BUILT="${TARGET_DIR:-$ROOT/src-tauri/target}/release/hourglass"
 [ -x "$BUILT" ] || { echo "error: built binary not found at $BUILT" >&2; exit 1; }
 
 # --- install binary + icons ---

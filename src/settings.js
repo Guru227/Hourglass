@@ -29,7 +29,14 @@
     el("pomodoroFields").style.display = mode === "pomodoro" ? "block" : "none";
   }
 
+  // The last config loaded from Rust. collect() spreads it so fields this
+  // form doesn't expose (e.g. idle_threshold_seconds) survive a save —
+  // Config is #[serde(default)], so any key omitted from the saved object is
+  // silently reset to its Rust default rather than left alone.
+  let loaded = {};
+
   function populate(c) {
+    loaded = c || {};
     el("work").value = (Math.max(1, c.work_seconds) / 60).toString();
     el("brk").value = c.break_seconds;
     const r = document.querySelector(`input[name="content"][value="${c.content_mode}"]`)
@@ -48,6 +55,14 @@
     el("pomoShort").value = (Math.max(1, c.pomodoro_short_break_seconds || 300) / 60).toString();
     el("pomoLong").value = (Math.max(1, c.pomodoro_long_break_seconds || 900) / 60).toString();
     el("pomoCycles").value = c.pomodoro_cycles || 4;
+
+    // Explicit typeof, not `||` — 0 is a meaningful value here ("never
+    // nudge") and `||` would silently rewrite it to the 2h default.
+    const nudgeAfter =
+      typeof c.pause_nudge_after_seconds === "number" ? c.pause_nudge_after_seconds : 7200;
+    el("nudgeAfter").value = (nudgeAfter / 60).toString();
+    el("nudgeSnooze").value = (Math.max(60, c.pause_snooze_seconds || 1800) / 60).toString();
+
     showModeFields(mode);
     fillDots(0, c.pomodoro_cycles || 4);
   }
@@ -61,7 +76,13 @@
     const pomoShortMin = parseFloat(el("pomoShort").value) || 5;
     const pomoLongMin = parseFloat(el("pomoLong").value) || 15;
     const pomoCycles = parseInt(el("pomoCycles").value, 10) || 4;
-    return {
+    // Number.isFinite rather than `|| default`: a deliberate 0 ("never
+    // nudge") is falsy and would otherwise be overwritten by the default.
+    const nudgeAfterRaw = parseFloat(el("nudgeAfter").value);
+    const nudgeAfterMin = Number.isFinite(nudgeAfterRaw) ? Math.max(0, nudgeAfterRaw) : 120;
+    const snoozeRaw = parseFloat(el("nudgeSnooze").value);
+    const snoozeMin = Number.isFinite(snoozeRaw) && snoozeRaw > 0 ? snoozeRaw : 30;
+    return Object.assign({}, loaded, {
       work_seconds: Math.max(1, Math.round(workMin * 60)),
       break_seconds: Math.max(1, brk),
       content_mode: content,
@@ -74,7 +95,9 @@
       pomodoro_short_break_seconds: Math.max(1, Math.round(pomoShortMin * 60)),
       pomodoro_long_break_seconds: Math.max(1, Math.round(pomoLongMin * 60)),
       pomodoro_cycles: Math.max(1, pomoCycles),
-    };
+      pause_nudge_after_seconds: Math.round(nudgeAfterMin * 60),
+      pause_snooze_seconds: Math.max(60, Math.round(snoozeMin * 60)),
+    });
   }
 
   // Live theme preview as the dropdown changes.

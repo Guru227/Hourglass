@@ -38,6 +38,7 @@
     "He who knows when he can fight and when he cannot will be victorious. — Sun Tzu",
     "Nature does not hurry, yet everything is accomplished. — Lao Tzu",
     "To do great work a man must be very idle as well as very industrious. — Samuel Butler",
+    "It takes a lot of energy to be the ego, it takes no energy to be yourself. — Mooji",
   ];
 
   function pick(mode) {

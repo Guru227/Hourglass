@@ -1,6 +1,6 @@
 [package]
 name = "hourglass"
-version = "0.5.0"
+version = "0.6.0"
 description = "A retro desktop break-reminder timer"
 authors = ["Guru227"]
 edition = "2021"

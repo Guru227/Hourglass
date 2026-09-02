@@ -58,10 +58,25 @@ restart):
 - **Bottom line content** — `Both`, `Factoids`, or `Quotes`.
 - **Theme** — CRT green (default), Dark (arcade), or Light.
 - The **heading / body** messages and the **"Done" button label**.
+- **Nudge if paused for** (minutes, `0` = never) and **Snooze length** (minutes)
+  — see below.
 
 Changes are written to the config file (below) and pushed to a running overlay
 immediately via a `config-updated` event; pause changes broadcast a
 `pause-changed` event so the tray and Settings always agree.
+
+### The pause nudge
+
+Pausing is easy to forget about — the corner "‖" silences reminders for the rest
+of the day if you never Resume. So after **2 hours paused** (configurable)
+Hourglass raises a small always-on-top window: **Switch on timer** resumes
+reminders, **Snooze** stays paused and asks again in **30 minutes**
+(configurable). A nudge you simply ignore comes back one snooze later rather
+than firing once and going quiet.
+
+The deadline is stored as a wall-clock timestamp, so it keeps counting while the
+machine is suspended, and editing the interval mid-pause re-anchors the pending
+nudge to the new value rather than waiting out the old one.
 
 ## How it works
 
@@ -71,6 +86,7 @@ immediately via a `config-updated` event; pause changes broadcast a
 | Fullscreen/sticky window | `show_overlay()` in `main.rs` — sets monitor size + `set_fullscreen` + `set_visible_on_all_workspaces` (reliable on Wayland) |
 | Tray + settings    | `build_tray()` in `main.rs`; settings window = `src/settings.html` + `settings.js` |
 | Break UI + countdown | `src/main.js` |
+| Pause nudge        | a 10s watchdog loop in `main.rs` polling `nudge_due_at_ms` (epoch millis, set in `set_pause`); window = `src/nudge.html` + `nudge.js` |
 | Pixel art          | `src/sprites.js` (procedural low-res canvas, blitted with `imageSmoothingEnabled=false`; mono-green in CRT theme) |
 | Factoids / quotes  | `src/content.js` |
 | Styling / themes   | `src/styles.css` (CSS custom properties swapped via `data-theme`) |
@@ -97,7 +113,9 @@ config dir, e.g. on Linux:
   "msg_body": "Time to stretch",
   "quit_button_msg": "I'm Done stretching!",
   "theme": "crt",             // "crt" | "dark" | "light"
-  "content_mode": "both"      // "both" | "factoids" | "quotes"
+  "content_mode": "both",     // "both" | "factoids" | "quotes"
+  "pause_nudge_after_seconds": 7200,  // nudge after this long paused; 0 = never
+  "pause_snooze_seconds": 1800        // what "Snooze" buys you (min 60)
 }
 ```
 

@@ -41,6 +41,12 @@ struct Config {
     /// Seconds of no keyboard/mouse input before the screen-time tracker
     /// treats the user as away.
     idle_threshold_seconds: u64,
+    /// Seconds a pause may run before Hourglass nudges you to switch the timer
+    /// back on. 0 disables the nudge entirely.
+    pause_nudge_after_seconds: u64,
+    /// How far the nudge's "Snooze" button pushes the next nudge out. Doubles
+    /// as the re-fire interval for a nudge the user never answers.
+    pause_snooze_seconds: u64,
 }
 
 impl Default for Config {
@@ -59,6 +65,8 @@ impl Default for Config {
             pomodoro_long_break_seconds: 900,
             pomodoro_cycles: 4,
             idle_threshold_seconds: 60,
+            pause_nudge_after_seconds: 7200,
+            pause_snooze_seconds: 1800,
         }
     }
 }
@@ -102,6 +110,18 @@ struct PhasePayload {
     cycles_before_long_break: u64,
 }
 
+/// What the pause-nudge window renders: how long this pause has actually run,
+/// what "Snooze" is worth right now, and the theme to paint in. Pushed as a
+/// `nudge-shown` event rather than read at page load — the nudge window is
+/// created hidden at startup and its webview stays alive while hidden, so
+/// `show()` never re-runs the page's boot code.
+#[derive(Debug, Clone, Serialize)]
+struct NudgeInfo {
+    paused_seconds: u64,
+    snooze_seconds: u64,
+    theme: String,
+}
+
 /// Shared state for the break loop and commands.
 struct AppState {
     config: Mutex<Config>,
@@ -120,6 +140,14 @@ struct AppState {
     // mid-session gets an instant snapshot instead of waiting for the next
     // transition (which may be up to a full work session away).
     current_phase: Mutex<Option<PhasePayload>>,
+    // Pause-nudge bookkeeping. Both are wall-clock epoch millis rather than
+    // timer futures, so a deadline keeps counting across a machine suspend
+    // (a `sleep(2h)` future would be suspended along with the machine).
+    // `paused_since_ms` is the anchor the deadline is re-derived from when the
+    // interval is edited mid-pause; `nudge_due_at_ms` is None whenever no
+    // nudge is armed — not paused, or the interval is configured to 0.
+    paused_since_ms: Mutex<Option<u64>>,
+    nudge_due_at_ms: Mutex<Option<u64>>,
 }
 
 /// Emits `phase-changed` and remembers it as the current snapshot for
@@ -263,6 +291,51 @@ async fn show_overlay(app: &AppHandle) {
     }
 }
 
+/// Snapshot for the pause-nudge window. `paused_seconds` is 0 when not
+/// paused, which the window renders as a generic line rather than "0m".
+fn nudge_info(app: &AppHandle) -> NudgeInfo {
+    let state = app.state::<AppState>();
+    let since = *state.paused_since_ms.lock().unwrap();
+    let cfg = state.config.lock().unwrap();
+    NudgeInfo {
+        paused_seconds: since
+            .map(|s| now_ms().saturating_sub(s) / 1000)
+            .unwrap_or(0),
+        snooze_seconds: cfg.pause_snooze_seconds.max(60),
+        theme: cfg.theme.clone(),
+    }
+}
+
+/// Raise the "still paused" nudge. Emits the payload *before* showing so the
+/// window paints the current numbers rather than flashing the previous
+/// nudge's text; the same show-then-settle-then-set-state dance as
+/// `show_overlay` is needed for always-on-top to stick under XWayland.
+async fn show_nudge(app: &AppHandle) {
+    let _ = app.emit("nudge-shown", nudge_info(app));
+    if let Some(win) = app.get_webview_window("nudge") {
+        let _ = win.show();
+        tokio::time::sleep(Duration::from_millis(150)).await;
+        let _ = win.set_always_on_top(true);
+        let _ = win.set_visible_on_all_workspaces(true);
+        let _ = win.set_focus();
+    }
+}
+
+fn hide_nudge(app: &AppHandle) {
+    if let Some(win) = app.get_webview_window("nudge") {
+        let _ = win.hide();
+    }
+}
+
+/// Arms the next nudge `pause_snooze_seconds` out from now. Used by the
+/// Snooze button and by the watchdog when it fires (so an ignored nudge
+/// comes back instead of going quiet after one appearance).
+fn arm_snooze(app: &AppHandle) {
+    let state = app.state::<AppState>();
+    let snooze = state.config.lock().unwrap().pause_snooze_seconds.max(60);
+    *state.nudge_due_at_ms.lock().unwrap() = Some(now_ms() + snooze * 1000);
+}
+
 #[tauri::command]
 fn load_config(state: State<AppState>) -> Config {
     state.config.lock().unwrap().clone()
@@ -275,6 +348,17 @@ fn save_config(app: AppHandle, state: State<AppState>, config: Config) {
         serde_json::to_string_pretty(&config).unwrap(),
     );
     *state.config.lock().unwrap() = config;
+    // If a pause is already running, re-anchor its nudge deadline off
+    // paused_since with the *new* interval — otherwise shortening the
+    // interval mid-pause wouldn't take effect until the pause after this one.
+    if state.paused.load(Ordering::SeqCst) {
+        let since = *state.paused_since_ms.lock().unwrap();
+        let after = state.config.lock().unwrap().pause_nudge_after_seconds;
+        *state.nudge_due_at_ms.lock().unwrap() = match since {
+            Some(s) if after > 0 => Some(s + after * 1000),
+            _ => None,
+        };
+    }
     let _ = app.emit("config-updated", ()); // live-apply in the overlay
 }
 
@@ -317,13 +401,44 @@ fn quit_app(app: AppHandle) {
     app.exit(0);
 }
 
+/// Nudge → "Switch on timer". `set_pause(false)` hides the nudge and clears
+/// the deadline itself, so this is a thin alias kept for a self-describing
+/// call site in the nudge window.
+#[tauri::command]
+fn nudge_resume(app: AppHandle) {
+    set_pause(&app, false);
+}
+
+/// Nudge → "Snooze". Stays paused; just pushes the next nudge out.
+#[tauri::command]
+fn nudge_snooze(app: AppHandle) {
+    arm_snooze(&app);
+    hide_nudge(&app);
+}
+
+#[tauri::command]
+fn load_nudge_info(app: AppHandle) -> NudgeInfo {
+    nudge_info(&app)
+}
+
 /// Single place that flips pause state and reflects it everywhere: the break
 /// loop, the tray (menu label + status line + tooltip), and a `pause-changed`
 /// event the settings window listens to.
 fn set_pause(app: &AppHandle, paused: bool) {
     let state = app.state::<AppState>();
     state.paused.store(paused, Ordering::SeqCst);
-    if !paused {
+    // Every pause path (tray, settings, the overlay's corner button) funnels
+    // through here, so arming/disarming the nudge here covers all of them.
+    if paused {
+        let after = state.config.lock().unwrap().pause_nudge_after_seconds;
+        let now = now_ms();
+        *state.paused_since_ms.lock().unwrap() = Some(now);
+        *state.nudge_due_at_ms.lock().unwrap() =
+            if after > 0 { Some(now + after * 1000) } else { None };
+    } else {
+        *state.paused_since_ms.lock().unwrap() = None;
+        *state.nudge_due_at_ms.lock().unwrap() = None;
+        hide_nudge(app);
         state.resume_pause.notify_one();
     }
     if let Some(item) = state.pause_item.lock().unwrap().as_ref() {
@@ -469,6 +584,8 @@ fn main() {
                 status_item: Mutex::new(None),
                 screentime_item: Mutex::new(None),
                 current_phase: Mutex::new(None),
+                paused_since_ms: Mutex::new(None),
+                nudge_due_at_ms: Mutex::new(None),
             });
 
             build_tray(&handle)?;
@@ -513,6 +630,42 @@ fn main() {
                                 "⏱ Screen time: {}",
                                 format_hm(stats.screen_active_seconds)
                             ));
+                        }
+                    }
+                });
+            }
+
+            // Pause watchdog: while paused, poll the wall-clock nudge deadline
+            // and raise the "still paused" window when it passes. Polling a
+            // stored epoch (rather than sleeping until a deadline) means the
+            // nudge is correct across suspend/resume and picks up a deadline
+            // that set_pause / save_config moved underneath it.
+            {
+                let h = handle.clone();
+                tauri::async_runtime::spawn(async move {
+                    const TICK_SECS: u64 = 10;
+                    loop {
+                        tokio::time::sleep(Duration::from_secs(TICK_SECS)).await;
+                        // Scoped so no MutexGuard (nor the State borrow) is
+                        // held across the await below — std guards aren't Send.
+                        let due_now = {
+                            let state = h.state::<AppState>();
+                            let armed = state.paused.load(Ordering::SeqCst)
+                                && matches!(
+                                    *state.nudge_due_at_ms.lock().unwrap(),
+                                    Some(due) if now_ms() >= due
+                                );
+                            if armed {
+                                // Re-arm before showing: a nudge the user
+                                // never answers comes back one snooze later
+                                // instead of firing once and going silent.
+                                drop(state);
+                                arm_snooze(&h);
+                            }
+                            armed
+                        };
+                        if due_now {
+                            show_nudge(&h).await;
                         }
                     }
                 });
@@ -613,7 +766,10 @@ fn main() {
             close_settings,
             quit_app,
             is_paused,
-            set_paused
+            set_paused,
+            nudge_resume,
+            nudge_snooze,
+            load_nudge_info
         ])
         .build(tauri::generate_context!())
         .expect("error while building Hourglass")
