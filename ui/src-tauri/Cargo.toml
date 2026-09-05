@@ -1,0 +1,20 @@
+[package]
+name = "hourglass-ui"
+version = "0.7.0"
+description = "Hourglass window host — shows one break/nudge/settings window, driven over stdio by hourglassd"
+authors = ["Guru227"]
+edition = "2021"
+rust-version = "1.77"
+
+[[bin]]
+name = "hourglass-ui"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+hourglass-proto = { path = "../../proto" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

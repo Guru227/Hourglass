@@ -1,0 +1,12 @@
+[workspace]
+resolver = "2"
+members = ["proto", "daemon", "ui/src-tauri"]
+
+# One profile for both binaries. `panic = "abort"` is deliberately NOT set:
+# cargo only allows it workspace-wide, and the Tauri/WebKit host has not
+# been proven safe without unwinding.
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true

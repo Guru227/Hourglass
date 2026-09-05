@@ -276,9 +276,10 @@ html, body {
   background: var(--fg);
   opacity: 0;
 }
-[data-theme="crt"] .crt-flicker { animation: flicker 6s infinite steps(60); }
-@keyframes flicker {
-  0%, 97%, 100% { opacity: 0; }
-  98%           { opacity: 0.025; }
-  99%           { opacity: 0.012; }
-}
+/* The flicker itself is driven from main.js (two opacity pokes every 6 s):
+   a CSS `animation: … infinite` on a full-screen layer keeps WebKit's
+   compositor producing frames for the whole cycle even while the value is
+   constant, which cost ~8% of a core in the GTK host for the entire time
+   the overlay was up. Setting `opacity` from a timer repaints exactly twice
+   per cycle. */
+[data-theme="crt"] .crt-flicker { transition: opacity 60ms linear; }

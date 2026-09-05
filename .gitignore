@@ -1,8 +1,8 @@
-# --- Tauri / Node ---
-node_modules/
-dist/
-src-tauri/target/
-src-tauri/gen/
+# --- Rust / Tauri / Node ---
+target/
+ui/node_modules/
+ui/dist/
+ui/src-tauri/gen/
 
 # --- legacy Java build artifacts ---
 /bin/

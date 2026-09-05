@@ -43,6 +43,7 @@
   };
 
   let breakTimer = null;
+  let artStops = [];
 
   function applyConfig(c) {
     cfg = Object.assign(cfg, c || {});
@@ -66,10 +67,37 @@
     quitLabel.textContent = copy.quit;
   }
 
+  // CRT phosphor flicker: a barely-there brightness blip every 6 s. Done
+  // from a timer rather than a CSS keyframe so the compositor is idle in
+  // between (see the note in styles.css).
+  let flickerTimer = null;
+  function startFlicker() {
+    const layer = document.querySelector(".crt-flicker");
+    if (!layer || flickerTimer) return;
+    flickerTimer = setInterval(() => {
+      if (document.documentElement.getAttribute("data-theme") !== "crt") return;
+      layer.style.opacity = "0.025";
+      setTimeout(() => { layer.style.opacity = "0.012"; }, 60);
+      setTimeout(() => { layer.style.opacity = "0"; }, 120);
+    }, 6000);
+  }
+  function stopFlicker() {
+    if (flickerTimer) clearInterval(flickerTimer);
+    flickerTimer = null;
+  }
+
+  function stopArt() {
+    artStops.forEach(stop => stop());
+    artStops = [];
+    stopFlicker();
+  }
+
   function startArt() {
-    window.HourglassArt.startSprite(el("spriteLeft"), { offset: 0 });
-    window.HourglassArt.startSprite(el("spriteRight"), { offset: 0.5, reverse: true });
-    window.HourglassArt.startHourglass(el("hourglass"));
+    stopArt();
+    startFlicker();
+    artStops.push(window.HourglassArt.startSprite(el("spriteLeft"), { offset: 0 }));
+    artStops.push(window.HourglassArt.startSprite(el("spriteRight"), { offset: 0.5, reverse: true }));
+    artStops.push(window.HourglassArt.startHourglass(el("hourglass")));
   }
 
   function newFactoid() {
@@ -83,6 +111,7 @@
     if (breakTimer) clearInterval(breakTimer);
     let remaining = Math.max(0, durationSeconds | 0);
     quitBtn.disabled = true;
+    window.HourglassArt.setPace(15); // lively while the forced break runs
     const tick = () => {
       if (remaining > 0) {
         countdownEl.textContent = "(" + remaining + "s)";
@@ -90,6 +119,8 @@
       } else {
         countdownEl.textContent = "";
         quitBtn.disabled = false;
+        // Nobody may be watching now — rest the art until dismissed.
+        window.HourglassArt.setPace(5);
         clearInterval(breakTimer);
         breakTimer = null;
       }
@@ -101,6 +132,7 @@
   function showBreak(payload) {
     // Reset to the configured simple-mode text, then let pomodoro-specific
     // copy overlay it when this break is a pomodoro short/long break.
+    if (artStops.length === 0) startArt();
     headingEl.textContent = cfg.msg_heading;
     bodyEl.textContent = cfg.msg_body;
     quitLabel.textContent = cfg.quit_button_msg;
@@ -115,6 +147,7 @@
     if (invoke) {
       await invoke("break_done");
     } else {
+      stopArt();
       overlay.style.display = "none";
       setTimeout(showBreak, 3000);
     }
@@ -123,6 +156,7 @@
   // Corner Pause: pause all future breaks and close the popup. Available
   // immediately (not gated by the break countdown). Resume from tray / Settings.
   pauseBtn.addEventListener("click", async () => {
+    stopArt();
     if (invoke) {
       await invoke("set_paused", { paused: true });
       await invoke("break_done");
@@ -146,11 +180,17 @@
       await listen("config-updated", async () => {
         try { applyConfig(await invoke("load_config")); } catch (e) {}
       });
+      // A freshly spawned break window has no phase-changed event to wait for;
+      // it must render from the snapshot the daemon passed at spawn.
+      try { const phase = await invoke("load_phase"); if (phase && phase.phase !== "work") showBreak(phase); } catch (e) {}
     } else {
       applyConfig(cfg);
       showBreak();
     }
   }
+
+  window.addEventListener("beforeunload", stopArt);
+  document.addEventListener("visibilitychange", () => document.documentElement.classList.toggle("hidden", document.hidden));
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);

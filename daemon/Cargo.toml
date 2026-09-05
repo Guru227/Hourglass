@@ -1,0 +1,33 @@
+[package]
+name = "hourglassd"
+version = "0.7.0"
+description = "Hourglass resident daemon — timer, tray, idle tracking. No WebKit."
+authors = ["Guru227"]
+edition = "2021"
+rust-version = "1.77"
+
+[[bin]]
+name = "hourglassd"
+path = "src/main.rs"
+
+[dependencies]
+hourglass-proto = { path = "../proto" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = "0.4"
+# Cross-platform tray + event loop (the same stack Tauri uses underneath).
+# On Linux this links GTK 3 (~15 MB of shared, already-resident pages); the
+# GTK-free `ksni` StatusNotifierItem path is a deliberate later refinement.
+tao = "0.35"
+tray-icon = "0.24"
+muda = "0.19"
+# Decodes the bundled PNG tray icon (tiny; already in the dependency tree).
+png = "0.17"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+# Idle time straight from the session bus via libdbus (already linked through
+# tao) — replaces the per-poll `gdbus` subprocess spawn of v0.6.
+dbus = "0.9"
+
+[target.'cfg(any(target_os = "macos", target_os = "windows"))'.dependencies]
+user-idle = "0.6"

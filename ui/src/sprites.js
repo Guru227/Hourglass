@@ -184,12 +184,48 @@
   const ROUTINE_MS = 3600;
   const REP_MS = 900; // one rep period
 
+  // Frame pacing. Chunky pixel art reads the same at 15 fps as at 60, but a
+  // 60 Hz requestAnimationFrame loop redrawing + blitting three canvases
+  // kept the WebKit renderer and compositor at ~18% of a core for the whole
+  // time the overlay was on screen (measured on v0.6/v0.7-pre). Waiting out
+  // the gap with setTimeout means the browser is not asked for a frame at
+  // all in between — cheaper than a rAF callback that early-returns.
+  // Returns a stop function that cancels whichever wait is pending.
+  // Two paces: lively while the forced countdown runs, and a resting pace
+  // once the "done" button is live — an overlay nobody is looking at (lunch,
+  // a meeting) used to burn a fifth of a core until someone came back.
+  let FRAME_MS = 1000 / 15;
+  function setPace(fps) { FRAME_MS = 1000 / Math.max(1, fps || 15); }
+  function paced(draw) {
+    let active = true;
+    let timer = null;
+    let raf = null;
+    let last = 0;
+    function frame(now) {
+      raf = null;
+      if (!active) return;
+      const dt = last ? Math.min(now - last, 100) : FRAME_MS;
+      last = now;
+      draw(now, dt);
+      timer = setTimeout(() => {
+        timer = null;
+        if (active) raf = requestAnimationFrame(frame);
+      }, FRAME_MS);
+    }
+    raf = requestAnimationFrame(frame);
+    return () => {
+      active = false;
+      if (timer !== null) clearTimeout(timer);
+      if (raf !== null) cancelAnimationFrame(raf);
+    };
+  }
+
   function startSprite(canvas, opts) {
     opts = opts || {};
     const s = makeStage(canvas, 40, 56);
     const offset = opts.offset || 0;       // phase offset so L/R differ
     const order = opts.reverse ? ROUTINE.slice().reverse() : ROUTINE;
-    function frame(now) {
+    return paced((now) => {
       const idx = Math.floor((now / ROUTINE_MS + offset)) % order.length;
       const ex = EXERCISES[order[idx]];
       const phase = (now % REP_MS) / REP_MS + offset;
@@ -198,10 +234,7 @@
       // ground shadow
       rect(s, 12, 53, 16, 1, "rgba(0,0,0,0.35)");
       blit(s);
-      canvas._raf = requestAnimationFrame(frame);
-    }
-    canvas._raf = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(canvas._raf);
+    });
   }
 
   // ---- the hourglass with falling sand ----------------------------------
@@ -210,8 +243,11 @@
     const grains = [];
     const NECK_Y = 21;
 
-    function frame(now) {
+    return paced((now, dt) => {
       const P = PAL;
+      // Grain motion was tuned per 60 Hz frame; scale by elapsed time so
+      // the sand falls at the same speed under the paced loop.
+      const step = dt / (1000 / 60);
       const p = (now % 5000) / 5000;       // 0 (full top) .. 1 (full bottom)
       clear(s);
 
@@ -258,20 +294,17 @@
       }
       for (let i = grains.length - 1; i >= 0; i--) {
         const g = grains[i];
-        g.y += g.v;
-        g.x += (Math.random() - 0.5) * 0.4;
+        g.y += g.v * step;
+        g.x += (Math.random() - 0.5) * 0.4 * step;
         px(s, g.x, g.y, P.sand);
         if (g.y >= 36 - pileH) grains.splice(i, 1);
       }
 
       blit(s);
-      canvas._raf = requestAnimationFrame(frame);
-    }
-    canvas._raf = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(canvas._raf);
+    });
   }
 
   function refreshTheme() { PAL = readPalette(); }
 
-  window.HourglassArt = { startSprite, startHourglass, refreshTheme };
+  window.HourglassArt = { startSprite, startHourglass, refreshTheme, setPace };
 })();

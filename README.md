@@ -78,6 +78,14 @@ The deadline is stored as a wall-clock timestamp, so it keeps counting while the
 machine is suspended, and editing the interval mid-pause re-anchors the pending
 nudge to the new value rather than waiting out the old one.
 
+## Architecture (v0.7): daemon + on-demand UI
+
+Hourglass is split into two binaries: `hourglassd` (resident daemon) and `hourglass-ui` (spawned per break). The daemon monitors idle time and manages the work/break schedule; the UI window appears only when a break is due and exits on dismiss.
+
+**Why:** v0.6 held three WebKit renderers resident (~840 MB). Now the daemon is ~20 MB; the UI exists only while on screen, keeping memory low.
+
+The daemon and UI communicate over stdio using JSON messages. On Linux, idle detection uses the GNOME Mutter IdleMonitor (D-Bus org.gnome.Mutter.IdleMonitor) with org.freedesktop.ScreenSaver fallback; macOS and Windows use the `user-idle` crate. Config and stats paths are unchanged.
+
 ## How it works
 
 | Concern            | Where                                   |
