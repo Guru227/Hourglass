@@ -118,8 +118,24 @@ case ":$PATH:" in
   *) echo ">> Note: $BIN_DIR is not on your PATH (only matters for launching 'hourglass' from a terminal)." ;;
 esac
 
+# --- start the freshly installed daemon ---
+# We killed whatever was running above, so leaving nothing behind until the
+# next login would mean no break reminders for the rest of the session.
+# setsid + closed stdio detaches it from this terminal; a second copy hands
+# off to the running one and exits, so this is safe to re-run.
+if [ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
+  setsid "$EXEC" >/dev/null 2>&1 </dev/null &
+  sleep 1
+  if pgrep -x hourglassd >/dev/null 2>&1; then
+    echo ">> hourglassd is running (pid $(pgrep -x hourglassd | head -1))."
+  else
+    echo ">> hourglassd did not stay up — run it by hand to see why: $EXEC" >&2
+  fi
+else
+  echo ">> No display session detected; not starting hourglassd now."
+fi
+
 echo ""
-echo "Done. The daemon is installed at $EXEC."
-echo "It will run on login (unless --no-autostart was used) and spawn UI windows on demand."
-[ "$AUTOSTART" -eq 1 ] && echo "The daemon will also start automatically next time you log in."
+echo "Done. The daemon is installed at $EXEC and spawns UI windows on demand."
+[ "$AUTOSTART" -eq 1 ] && echo "It will also start automatically next time you log in."
 echo "Uninstall any time with:   $ROOT/uninstall.sh"
