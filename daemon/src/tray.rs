@@ -1,4 +1,5 @@
-//! Tray icon + menu (main thread only). STUB — "tray/launcher/main" work unit.
+//! Tray icon + menu (main thread only). v0.6's menu, rebuilt on tray-icon +
+//! muda so no Tauri is linked into the resident process.
 
 use muda::{Menu, MenuEvent, MenuItem, PredefinedMenuItem};
 use tray_icon::{Icon, TrayIcon, TrayIconBuilder};

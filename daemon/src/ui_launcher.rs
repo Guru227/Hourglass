@@ -1,4 +1,9 @@
-//! hourglass-ui child management (main thread only). STUB — "tray/launcher/main" work unit.
+//! hourglass-ui child management (main thread only).
+//!
+//! One `hourglass-ui` process per window kind, spawned with an [`InitState`]
+//! JSON blob in argv, fed [`ToUi`] lines on stdin, read for [`FromUi`] lines
+//! on stdout by a per-child reader thread. Nothing here is resident between
+//! windows — when the map is empty, no WebKit exists anywhere.
 
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Write};
